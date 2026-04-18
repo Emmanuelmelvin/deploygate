@@ -83,11 +83,15 @@ export async function listDeployments() {
   return globalDeploymentManager.listDeployments();
 }
 
-export async function startSlot(deploymentId: string, slot: Slot) {
+export async function startSlot(
+  deploymentId: string,
+  slot: Slot,
+  port?: number
+) {
   if (!globalProcessManager) {
     await initializeManagers();
   }
-  return globalProcessManager.startSlot(deploymentId, slot);
+  return globalProcessManager.startSlot(deploymentId, slot, port);
 }
 
 export async function stopSlot(deploymentId: string, slot: Slot) {

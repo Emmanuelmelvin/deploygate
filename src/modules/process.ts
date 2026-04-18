@@ -3,13 +3,14 @@ import type { StateStore } from '../store/index';
 import { DeploygateError } from '../errors';
 import logger from '../logger';
 
-const PREVIEW_PORT = 3000;
-const PRODUCTION_PORT = 3001;
-
 export class ProcessManager {
   constructor(private store: StateStore) {}
 
-  async startSlot(deploymentId: string, slot: Slot): Promise<void> {
+  async startSlot(
+    deploymentId: string,
+    slot: Slot,
+    port?: number
+  ): Promise<void> {
     const deployment = await this.store.get(deploymentId);
     if (!deployment) {
       const error = new DeploygateError(
@@ -36,11 +37,11 @@ export class ProcessManager {
       throw error;
     }
 
-    const port = slot === 'preview' ? PREVIEW_PORT : PRODUCTION_PORT;
-
     slotState.status = 'running';
     slotState.startedAt = new Date();
-    slotState.port = port;
+    if (port !== undefined) {
+      slotState.port = port;
+    }
 
     await this.store.set(deploymentId, deployment);
   }
