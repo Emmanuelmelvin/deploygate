@@ -23,6 +23,19 @@ export class ProcessManager {
     }
 
     const slotState = deployment.slots[slot];
+
+    // Validate slot state transition: only 'stopped' or 'crashed' slots can be started
+    if (slotState.status !== 'stopped' && slotState.status !== 'crashed') {
+      const error = new DeploygateError(
+        `Cannot start ${slot} slot of deployment ${deploymentId}: current status is '${slotState.status}'. Only slots with status 'stopped' or 'crashed' can be started.`,
+        'SLOT_START_FAILED',
+        400,
+        { deploymentId, slot, currentStatus: slotState.status }
+      );
+      logger.error(error);
+      throw error;
+    }
+
     const port = slot === 'preview' ? PREVIEW_PORT : PRODUCTION_PORT;
 
     slotState.status = 'running';
@@ -46,6 +59,19 @@ export class ProcessManager {
     }
 
     const slotState = deployment.slots[slot];
+
+    // Validate slot state transition: only 'running' or 'starting' slots can be stopped
+    if (slotState.status !== 'running' && slotState.status !== 'starting') {
+      const error = new DeploygateError(
+        `Cannot stop ${slot} slot of deployment ${deploymentId}: current status is '${slotState.status}'. Only slots with status 'running' or 'starting' can be stopped.`,
+        'SLOT_STOP_FAILED',
+        400,
+        { deploymentId, slot, currentStatus: slotState.status }
+      );
+      logger.error(error);
+      throw error;
+    }
+
     slotState.status = 'stopped';
     slotState.stoppedAt = new Date();
 

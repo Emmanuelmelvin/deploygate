@@ -22,10 +22,22 @@ export class PromoteEngine {
       throw error;
     }
 
+    // Validate deployment state transition: only 'running' deployments can be promoted
+    if (deployment.status !== 'running') {
+      const error = new DeploygateError(
+        `Cannot promote deployment ${deploymentId}: current status is '${deployment.status}'. Only deployments with status 'running' can be promoted.`,
+        'PROMOTION_FAILED',
+        400,
+        { deploymentId, currentStatus: deployment.status }
+      );
+      logger.error(error);
+      throw error;
+    }
+
     const previewSlot = deployment.slots.preview;
     if (previewSlot.status !== 'running') {
       const error = new DeploygateError(
-        `Cannot promote: preview slot is not running (status: ${previewSlot.status})`,
+        `Cannot promote deployment ${deploymentId}: preview slot is not running (status: ${previewSlot.status})`,
         'PROMOTION_FAILED',
         400,
         { deploymentId, slotStatus: previewSlot.status }
@@ -58,6 +70,18 @@ export class PromoteEngine {
         'DEPLOYMENT_NOT_FOUND',
         404,
         { deploymentId }
+      );
+      logger.error(error);
+      throw error;
+    }
+
+    // Validate deployment state transition: only 'promoted' deployments can be rolled back
+    if (deployment.status !== 'promoted') {
+      const error = new DeploygateError(
+        `Cannot rollback deployment ${deploymentId}: current status is '${deployment.status}'. Only deployments with status 'promoted' can be rolled back.`,
+        'ROLLBACK_FAILED',
+        400,
+        { deploymentId, currentStatus: deployment.status }
       );
       logger.error(error);
       throw error;
