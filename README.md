@@ -1,6 +1,6 @@
 # deploygate
 
-A TypeScript library and CLI tool for hosting platforms to manage preview/production deployment slots with atomic promotion. deploygate enables hosting platforms to safely manage multiple deployment environments, promote changes from preview to production, and rollback if needed—all with a clean typed API and command-line interface.
+A TypeScript library and CLI tool for hosting platforms to manage preview/production deployment slots with atomic promotion. deploygate enables hosting platforms to safely manage multiple deployment environments, promote changes from preview to production, and rollback if needed—all with a clean typed API and command-line interface. Deploygate is basically a deployment lifecycle manager. It takes a build, creates two slots (preview and production), manages the state transitions between them, and tells the platform what happened via hooks. Everything outside that — projects, users, processes, databases, logs, domains infrastructure — belongs to the platform.
 
 ## Install
 
