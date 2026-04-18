@@ -35,10 +35,7 @@ import { ProcessManager } from './modules/process';
 import { PromoteEngine } from './modules/promote';
 import { DomainManager } from './modules/domain';
 import { loadConfig } from './config';
-import type {
-  DeploygateConfig,
-  Slot,
-} from './types';
+import type { DeploygateConfig, Slot } from './types';
 
 let globalConfig: DeploygateConfig = {};
 let globalDeploymentManager: DeploymentManager;

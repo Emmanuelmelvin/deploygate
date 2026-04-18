@@ -6,11 +6,7 @@ export type DeploymentStatus =
   | 'promoted'
   | 'failed'
   | 'stopped';
-export type ProcessStatus =
-  | 'starting'
-  | 'running'
-  | 'stopped'
-  | 'crashed';
+export type ProcessStatus = 'starting' | 'running' | 'stopped' | 'crashed';
 
 export interface SlotState {
   status: ProcessStatus;

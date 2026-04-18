@@ -4,7 +4,10 @@ import { DeploygateError } from '../errors';
 import logger from '../logger';
 
 export class DomainManager {
-  constructor(private store: StateStore, private config?: DeploygateConfig) {}
+  constructor(
+    private store: StateStore,
+    private config?: DeploygateConfig
+  ) {}
 
   async bindDomain(
     deploymentId: string,
@@ -26,7 +29,9 @@ export class DomainManager {
     deployment.slots[slot].domain = domain;
     await this.store.set(deploymentId, deployment);
 
-    logger.info(`Domain ${domain} bound to ${slot} slot of deployment ${deploymentId}`);
+    logger.info(
+      `Domain ${domain} bound to ${slot} slot of deployment ${deploymentId}`
+    );
 
     if (this.config?.hooks?.onDomainBound) {
       await this.config.hooks.onDomainBound(deployment, slot, domain);
@@ -49,10 +54,15 @@ export class DomainManager {
     delete deployment.slots[slot].domain;
     await this.store.set(deploymentId, deployment);
 
-    logger.info(`Domain unbound from ${slot} slot of deployment ${deploymentId}`);
+    logger.info(
+      `Domain unbound from ${slot} slot of deployment ${deploymentId}`
+    );
   }
 
-  async getDomain(deploymentId: string, slot: Slot): Promise<string | undefined> {
+  async getDomain(
+    deploymentId: string,
+    slot: Slot
+  ): Promise<string | undefined> {
     const deployment = await this.store.get(deploymentId);
     if (!deployment) {
       const error = new DeploygateError(

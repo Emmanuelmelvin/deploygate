@@ -17,7 +17,11 @@ describe('DomainManager', () => {
   it('bindDomain sets the domain on the correct slot', async () => {
     const deployment = await deploymentManager.createDeployment('build-123');
 
-    await domainManager.bindDomain(deployment.id, 'preview', 'preview.example.com');
+    await domainManager.bindDomain(
+      deployment.id,
+      'preview',
+      'preview.example.com'
+    );
 
     const updated = await store.get(deployment.id);
     expect(updated?.slots.preview.domain).toBe('preview.example.com');
@@ -50,7 +54,8 @@ describe('DomainManager', () => {
   });
 
   it('getDomain returns undefined if no domain is bound', async () => {
-    const deployment = await deploymentManager.createDeployment('build-no-domain');
+    const deployment =
+      await deploymentManager.createDeployment('build-no-domain');
 
     const domain = await domainManager.getDomain(deployment.id, 'preview');
     expect(domain).toBeUndefined();

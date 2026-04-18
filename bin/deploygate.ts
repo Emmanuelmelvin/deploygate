@@ -18,7 +18,10 @@ import {
 
 const program = new Command();
 
-program.name('deploygate').description('Manage deployment slots').version('0.1.0');
+program
+  .name('deploygate')
+  .description('Manage deployment slots')
+  .version('0.1.0');
 
 program
   .command('create <buildId>')
@@ -33,7 +36,9 @@ program
       if (error instanceof DeploygateError) {
         logger.error(`Error [${error.code}]: ${error.message}`);
       } else {
-        logger.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+        logger.error(
+          `Error: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
       process.exit(1);
     }
@@ -55,7 +60,9 @@ program
       if (error instanceof DeploygateError) {
         logger.error(`Error [${error.code}]: ${error.message}`);
       } else {
-        logger.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+        logger.error(
+          `Error: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
       process.exit(1);
     }
@@ -73,7 +80,9 @@ program
       if (error instanceof DeploygateError) {
         logger.error(`Error [${error.code}]: ${error.message}`);
       } else {
-        logger.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+        logger.error(
+          `Error: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
       process.exit(1);
     }
@@ -96,7 +105,9 @@ program
       if (error instanceof DeploygateError) {
         logger.error(`Error [${error.code}]: ${error.message}`);
       } else {
-        logger.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+        logger.error(
+          `Error: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
       process.exit(1);
     }
@@ -119,7 +130,9 @@ program
       if (error instanceof DeploygateError) {
         logger.error(`Error [${error.code}]: ${error.message}`);
       } else {
-        logger.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+        logger.error(
+          `Error: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
       process.exit(1);
     }
@@ -137,7 +150,9 @@ program
       if (error instanceof DeploygateError) {
         logger.error(`Error [${error.code}]: ${error.message}`);
       } else {
-        logger.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+        logger.error(
+          `Error: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
       process.exit(1);
     }
@@ -155,7 +170,9 @@ program
       if (error instanceof DeploygateError) {
         logger.error(`Error [${error.code}]: ${error.message}`);
       } else {
-        logger.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+        logger.error(
+          `Error: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
       process.exit(1);
     }
@@ -174,7 +191,9 @@ domainCommand
         logger.error('Slot must be either "preview" or "production"');
         process.exit(1);
       }
-      logger.info(`Binding domain ${domain} to ${slot} slot of deployment ${deploymentId}`);
+      logger.info(
+        `Binding domain ${domain} to ${slot} slot of deployment ${deploymentId}`
+      );
       await bindDomain(deploymentId, slot as 'preview' | 'production', domain);
       const deployment = await getDeployment(deploymentId);
       logger.info(JSON.stringify(deployment, null, 2));
@@ -182,7 +201,9 @@ domainCommand
       if (error instanceof DeploygateError) {
         logger.error(`Error [${error.code}]: ${error.message}`);
       } else {
-        logger.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+        logger.error(
+          `Error: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
       process.exit(1);
     }
@@ -197,7 +218,9 @@ domainCommand
         logger.error('Slot must be either "preview" or "production"');
         process.exit(1);
       }
-      logger.info(`Unbinding domain from ${slot} slot of deployment ${deploymentId}`);
+      logger.info(
+        `Unbinding domain from ${slot} slot of deployment ${deploymentId}`
+      );
       await unbindDomain(deploymentId, slot as 'preview' | 'production');
       const deployment = await getDeployment(deploymentId);
       logger.info(JSON.stringify(deployment, null, 2));
@@ -205,7 +228,9 @@ domainCommand
       if (error instanceof DeploygateError) {
         logger.error(`Error [${error.code}]: ${error.message}`);
       } else {
-        logger.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+        logger.error(
+          `Error: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
       process.exit(1);
     }
@@ -220,7 +245,9 @@ domainCommand
         logger.error('Slot must be either "preview" or "production"');
         process.exit(1);
       }
-      logger.info(`Getting domain for ${slot} slot of deployment ${deploymentId}`);
+      logger.info(
+        `Getting domain for ${slot} slot of deployment ${deploymentId}`
+      );
       const domain = await getDomain(
         deploymentId,
         slot as 'preview' | 'production'
@@ -230,7 +257,9 @@ domainCommand
       if (error instanceof DeploygateError) {
         logger.error(`Error [${error.code}]: ${error.message}`);
       } else {
-        logger.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+        logger.error(
+          `Error: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
       process.exit(1);
     }

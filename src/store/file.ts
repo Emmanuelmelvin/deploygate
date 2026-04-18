@@ -34,11 +34,7 @@ export class FileStore implements StateStore {
 
   private async writeFile(data: Record<string, Deployment>): Promise<void> {
     await this.ensureDir();
-    await writeFile(
-      this.getFilePath(),
-      JSON.stringify(data, null, 2),
-      'utf-8'
-    );
+    await writeFile(this.getFilePath(), JSON.stringify(data, null, 2), 'utf-8');
   }
 
   async get(id: string): Promise<Deployment | null> {

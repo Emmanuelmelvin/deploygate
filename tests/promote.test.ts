@@ -117,7 +117,8 @@ describe('PromoteEngine', () => {
     };
 
     const engine = new PromoteEngine(store, config);
-    const deployment = await deploymentManager.createDeployment('build-rollback');
+    const deployment =
+      await deploymentManager.createDeployment('build-rollback');
 
     // Set up promoted state
     const promoted = {

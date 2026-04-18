@@ -4,7 +4,10 @@ import { DeploygateError } from '../errors';
 import logger from '../logger';
 
 export class PromoteEngine {
-  constructor(private store: StateStore, private config?: DeploygateConfig) {}
+  constructor(
+    private store: StateStore,
+    private config?: DeploygateConfig
+  ) {}
 
   async promote(deploymentId: string): Promise<Deployment> {
     const deployment = await this.store.get(deploymentId);

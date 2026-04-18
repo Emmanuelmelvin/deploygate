@@ -15,12 +15,7 @@ Requires Node.js >= 18.
 ### Library Usage
 
 ```typescript
-import {
-  createDeployment,
-  startSlot,
-  promote,
-  bindDomain,
-} from 'deploygate';
+import { createDeployment, startSlot, promote, bindDomain } from 'deploygate';
 
 // Create a new deployment
 const deployment = await createDeployment('build-abc123');
