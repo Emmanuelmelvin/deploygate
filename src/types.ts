@@ -36,8 +36,16 @@ export interface DeploygateHooks {
   ) => Promise<void>;
 }
 
+export interface StateStore {
+  get(id: string): Promise<Deployment | null>;
+  set(id: string, deployment: Deployment): Promise<void>;
+  list(): Promise<Deployment[]>;
+  delete(id: string): Promise<void>;
+}
+
 export interface DeploygateConfig {
   adapter?: 'memory' | 'file';
   dataDir?: string;
+  store?: StateStore;
   hooks?: DeploygateHooks;
 }

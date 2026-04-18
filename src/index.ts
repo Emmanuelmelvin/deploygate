@@ -35,7 +35,7 @@ import { ProcessManager } from './modules/process';
 import { PromoteEngine } from './modules/promote';
 import { DomainManager } from './modules/domain';
 import { loadConfig } from './config';
-import type { DeploygateConfig, Slot } from './types';
+import type { DeploygateConfig, Slot, StateStore } from './types';
 
 let globalConfig: DeploygateConfig = {};
 let globalDeploymentManager: DeploymentManager;
@@ -47,13 +47,18 @@ async function initializeManagers(config?: DeploygateConfig) {
   const finalConfig = config || (await loadConfig());
   globalConfig = finalConfig;
 
-  const adapter = finalConfig.adapter || 'memory';
-  let store;
+  // Use custom store if provided, otherwise create one based on adapter
+  let store: StateStore;
 
-  if (adapter === 'file') {
-    store = new FileStore(finalConfig.dataDir);
+  if (finalConfig.store) {
+    store = finalConfig.store;
   } else {
-    store = new MemoryStore();
+    const adapter = finalConfig.adapter || 'memory';
+    if (adapter === 'file') {
+      store = new FileStore(finalConfig.dataDir);
+    } else {
+      store = new MemoryStore();
+    }
   }
 
   globalDeploymentManager = new DeploymentManager(store);
@@ -66,18 +71,23 @@ async function initializeManagers(config?: DeploygateConfig) {
  * Create a new deployment with a given build ID.
  *
  * @param buildId - Unique identifier for the build (e.g., "build-abc123")
+ * @param config - Optional configuration object with custom store and hooks
  * @returns A new Deployment object with preview and production slots both in 'stopped' state
  * @throws Error if buildId is empty or not a string
  *
  * @example
  * ```typescript
+ * // Using default config
  * const deployment = await createDeployment('build-123');
  * console.log(deployment.id); // UUID
+ *
+ * // Using custom store
+ * const deployment = await createDeployment('build-123', { store: customStore });
  * ```
  */
-export async function createDeployment(buildId: string) {
-  if (!globalDeploymentManager) {
-    await initializeManagers();
+export async function createDeployment(buildId: string, config?: DeploygateConfig) {
+  if (!globalDeploymentManager || config?.store) {
+    await initializeManagers(config);
   }
   return globalDeploymentManager.createDeployment(buildId, globalConfig);
 }
@@ -86,6 +96,7 @@ export async function createDeployment(buildId: string) {
  * Retrieve a deployment by ID.
  *
  * @param id - The deployment UUID
+ * @param config - Optional configuration object with custom store and hooks
  * @returns The Deployment object, or null if not found
  * @throws Error if id is empty or not a string
  *
@@ -97,9 +108,9 @@ export async function createDeployment(buildId: string) {
  * }
  * ```
  */
-export async function getDeployment(id: string) {
-  if (!globalDeploymentManager) {
-    await initializeManagers();
+export async function getDeployment(id: string, config?: DeploygateConfig) {
+  if (!globalDeploymentManager || config?.store) {
+    await initializeManagers(config);
   }
   return globalDeploymentManager.getDeployment(id);
 }
@@ -107,6 +118,7 @@ export async function getDeployment(id: string) {
 /**
  * List all deployments in the state store.
  *
+ * @param config - Optional configuration object with custom store and hooks
  * @returns Array of all Deployment objects
  *
  * @example
@@ -115,9 +127,9 @@ export async function getDeployment(id: string) {
  * console.log(`Total deployments: ${deployments.length}`);
  * ```
  */
-export async function listDeployments() {
-  if (!globalDeploymentManager) {
-    await initializeManagers();
+export async function listDeployments(config?: DeploygateConfig) {
+  if (!globalDeploymentManager || config?.store) {
+    await initializeManagers(config);
   }
   return globalDeploymentManager.listDeployments();
 }
@@ -131,22 +143,41 @@ export async function listDeployments() {
  *
  * @param deploymentId - The deployment UUID
  * @param slot - The slot to start: 'preview' or 'production'
- * @param port - Optional port number to store in the slot state. The platform
- *               uses this to track which port the process is running on.
+ * @param portOrConfig - Optional port number (number) or configuration object (DeploygateConfig)
+ * @param maybeConfig - Optional configuration object if portOrConfig is a number
  * @throws Error if deploymentId is invalid, slot is invalid, or slot is already running
  *
  * @example
  * ```typescript
+ * // With port
  * await startSlot(deployment.id, 'preview', 3000);
+ *
+ * // With custom store
+ * await startSlot(deployment.id, 'preview', undefined, { store: customStore });
+ *
+ * // With both
+ * await startSlot(deployment.id, 'preview', 3000, { store: customStore });
  * ```
  */
 export async function startSlot(
   deploymentId: string,
   slot: Slot,
-  port?: number
+  portOrConfig?: number | DeploygateConfig,
+  maybeConfig?: DeploygateConfig
 ) {
-  if (!globalProcessManager) {
-    await initializeManagers();
+  // Parse arguments: port can be number or config, maybeConfig is config if port was provided
+  let port: number | undefined;
+  let config: DeploygateConfig | undefined;
+
+  if (typeof portOrConfig === 'number') {
+    port = portOrConfig;
+    config = maybeConfig;
+  } else if (portOrConfig && typeof portOrConfig === 'object') {
+    config = portOrConfig;
+  }
+
+  if (!globalProcessManager || config?.store) {
+    await initializeManagers(config);
   }
   return globalProcessManager.startSlot(deploymentId, slot, port);
 }
@@ -159,6 +190,7 @@ export async function startSlot(
  *
  * @param deploymentId - The deployment UUID
  * @param slot - The slot to stop: 'preview' or 'production'
+ * @param config - Optional configuration object with custom store and hooks
  * @throws Error if deploymentId is invalid, slot is invalid, or slot is not running
  *
  * @example
@@ -166,9 +198,9 @@ export async function startSlot(
  * await stopSlot(deployment.id, 'preview');
  * ```
  */
-export async function stopSlot(deploymentId: string, slot: Slot) {
-  if (!globalProcessManager) {
-    await initializeManagers();
+export async function stopSlot(deploymentId: string, slot: Slot, config?: DeploygateConfig) {
+  if (!globalProcessManager || config?.store) {
+    await initializeManagers(config);
   }
   return globalProcessManager.stopSlot(deploymentId, slot);
 }
@@ -183,6 +215,7 @@ export async function stopSlot(deploymentId: string, slot: Slot) {
  * Calls the onPromoted hook if configured.
  *
  * @param deploymentId - The deployment UUID
+ * @param config - Optional configuration object with custom store and hooks
  * @returns The updated Deployment object with production slot now containing preview's state
  * @throws Error if deployment not found, preview slot not running, or promotion fails
  *
@@ -192,9 +225,9 @@ export async function stopSlot(deploymentId: string, slot: Slot) {
  * console.log('Production slot:', promoted.slots.production);
  * ```
  */
-export async function promote(deploymentId: string) {
-  if (!globalPromoteEngine) {
-    await initializeManagers();
+export async function promote(deploymentId: string, config?: DeploygateConfig) {
+  if (!globalPromoteEngine || config?.store) {
+    await initializeManagers(config);
   }
   return globalPromoteEngine.promote(deploymentId);
 }
@@ -208,6 +241,7 @@ export async function promote(deploymentId: string) {
  * Calls the onRollback hook if configured.
  *
  * @param deploymentId - The deployment UUID
+ * @param config - Optional configuration object with custom store and hooks
  * @returns The updated Deployment object with production slot now in 'stopped' state
  * @throws Error if deployment not found, deployment not promoted, or rollback fails
  *
@@ -217,9 +251,9 @@ export async function promote(deploymentId: string) {
  * console.log('Production slot stopped:', rolled.slots.production.status);
  * ```
  */
-export async function rollback(deploymentId: string) {
-  if (!globalPromoteEngine) {
-    await initializeManagers();
+export async function rollback(deploymentId: string, config?: DeploygateConfig) {
+  if (!globalPromoteEngine || config?.store) {
+    await initializeManagers(config);
   }
   return globalPromoteEngine.rollback(deploymentId);
 }
@@ -235,6 +269,7 @@ export async function rollback(deploymentId: string) {
  * @param deploymentId - The deployment UUID
  * @param slot - The slot to bind to: 'preview' or 'production'
  * @param domain - The domain name (e.g., 'example.com', 'api.example.com')
+ * @param config - Optional configuration object with custom store and hooks
  * @throws Error if deploymentId invalid, slot invalid, domain format invalid, or deployment not found
  *
  * @example
@@ -245,10 +280,11 @@ export async function rollback(deploymentId: string) {
 export async function bindDomain(
   deploymentId: string,
   slot: Slot,
-  domain: string
+  domain: string,
+  config?: DeploygateConfig
 ) {
-  if (!globalDomainManager) {
-    await initializeManagers();
+  if (!globalDomainManager || config?.store) {
+    await initializeManagers(config);
   }
   return globalDomainManager.bindDomain(deploymentId, slot, domain);
 }
@@ -261,6 +297,7 @@ export async function bindDomain(
  *
  * @param deploymentId - The deployment UUID
  * @param slot - The slot to unbind from: 'preview' or 'production'
+ * @param config - Optional configuration object with custom store and hooks
  * @throws Error if deploymentId invalid, slot invalid, or deployment not found
  *
  * @example
@@ -268,9 +305,9 @@ export async function bindDomain(
  * await unbindDomain(deployment.id, 'preview');
  * ```
  */
-export async function unbindDomain(deploymentId: string, slot: Slot) {
-  if (!globalDomainManager) {
-    await initializeManagers();
+export async function unbindDomain(deploymentId: string, slot: Slot, config?: DeploygateConfig) {
+  if (!globalDomainManager || config?.store) {
+    await initializeManagers(config);
   }
   return globalDomainManager.unbindDomain(deploymentId, slot);
 }
@@ -280,6 +317,7 @@ export async function unbindDomain(deploymentId: string, slot: Slot) {
  *
  * @param deploymentId - The deployment UUID
  * @param slot - The slot to query: 'preview' or 'production'
+ * @param config - Optional configuration object with custom store and hooks
  * @returns The domain string if bound, or undefined if no domain is bound
  * @throws Error if deploymentId invalid, slot invalid, or deployment not found
  *
@@ -289,9 +327,9 @@ export async function unbindDomain(deploymentId: string, slot: Slot) {
  * console.log(domain); // 'preview.example.com' or undefined
  * ```
  */
-export async function getDomain(deploymentId: string, slot: Slot) {
-  if (!globalDomainManager) {
-    await initializeManagers();
+export async function getDomain(deploymentId: string, slot: Slot, config?: DeploygateConfig) {
+  if (!globalDomainManager || config?.store) {
+    await initializeManagers(config);
   }
   return globalDomainManager.getDomain(deploymentId, slot);
 }
