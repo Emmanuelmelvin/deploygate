@@ -1,0 +1,24 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  color: white;
+  text-align: center;
+}
+
+.app h1 {
+  font-size: 3rem;
+  margin-bottom: 2rem;
+}
+
+.time {
+  font-size: 1.5rem;
+  font-family: monospace;
+  margin-bottom: 2rem;
+}
+
+.note {
+  font-size: 1.1rem;
+}

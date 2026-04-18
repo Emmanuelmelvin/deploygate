@@ -1,0 +1,19 @@
+{
+  "name": "deploygate-example",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build:app": "cd react-app && npm install && npm run build",
+    "platform": "tsx platform/index.ts",
+    "dev": "npm run build:app && npm run platform deploy react-app/dist"
+  },
+  "dependencies": {
+    "deploygate": "file:../../",
+    "commander": "^12.0.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0",
+    "typescript": "^5.4.0"
+  }
+}
