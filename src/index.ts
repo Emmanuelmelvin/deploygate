@@ -62,6 +62,19 @@ async function initializeManagers(config?: DeploygateConfig) {
   globalDomainManager = new DomainManager(store, finalConfig);
 }
 
+/**
+ * Create a new deployment with a given build ID.
+ *
+ * @param buildId - Unique identifier for the build (e.g., "build-abc123")
+ * @returns A new Deployment object with preview and production slots both in 'stopped' state
+ * @throws Error if buildId is empty or not a string
+ *
+ * @example
+ * ```typescript
+ * const deployment = await createDeployment('build-123');
+ * console.log(deployment.id); // UUID
+ * ```
+ */
 export async function createDeployment(buildId: string) {
   if (!globalDeploymentManager) {
     await initializeManagers();
@@ -69,6 +82,21 @@ export async function createDeployment(buildId: string) {
   return globalDeploymentManager.createDeployment(buildId, globalConfig);
 }
 
+/**
+ * Retrieve a deployment by ID.
+ *
+ * @param id - The deployment UUID
+ * @returns The Deployment object, or null if not found
+ * @throws Error if id is empty or not a string
+ *
+ * @example
+ * ```typescript
+ * const deployment = await getDeployment('550e8400-e29b-41d4-a716-446655440000');
+ * if (deployment) {
+ *   console.log(deployment.slots.preview.status);
+ * }
+ * ```
+ */
 export async function getDeployment(id: string) {
   if (!globalDeploymentManager) {
     await initializeManagers();
@@ -76,6 +104,17 @@ export async function getDeployment(id: string) {
   return globalDeploymentManager.getDeployment(id);
 }
 
+/**
+ * List all deployments in the state store.
+ *
+ * @returns Array of all Deployment objects
+ *
+ * @example
+ * ```typescript
+ * const deployments = await listDeployments();
+ * console.log(`Total deployments: ${deployments.length}`);
+ * ```
+ */
 export async function listDeployments() {
   if (!globalDeploymentManager) {
     await initializeManagers();
@@ -83,6 +122,24 @@ export async function listDeployments() {
   return globalDeploymentManager.listDeployments();
 }
 
+/**
+ * Start a deployment slot (preview or production).
+ *
+ * Transitions the slot from 'stopped' or 'crashed' to 'running' status.
+ * The platform is responsible for actually spawning processes; this function
+ * only updates the slot state.
+ *
+ * @param deploymentId - The deployment UUID
+ * @param slot - The slot to start: 'preview' or 'production'
+ * @param port - Optional port number to store in the slot state. The platform
+ *               uses this to track which port the process is running on.
+ * @throws Error if deploymentId is invalid, slot is invalid, or slot is already running
+ *
+ * @example
+ * ```typescript
+ * await startSlot(deployment.id, 'preview', 3000);
+ * ```
+ */
 export async function startSlot(
   deploymentId: string,
   slot: Slot,
@@ -94,6 +151,21 @@ export async function startSlot(
   return globalProcessManager.startSlot(deploymentId, slot, port);
 }
 
+/**
+ * Stop a deployment slot (preview or production).
+ *
+ * Transitions the slot from 'running' or 'starting' to 'stopped' status.
+ * The platform is responsible for actually terminating processes.
+ *
+ * @param deploymentId - The deployment UUID
+ * @param slot - The slot to stop: 'preview' or 'production'
+ * @throws Error if deploymentId is invalid, slot is invalid, or slot is not running
+ *
+ * @example
+ * ```typescript
+ * await stopSlot(deployment.id, 'preview');
+ * ```
+ */
 export async function stopSlot(deploymentId: string, slot: Slot) {
   if (!globalProcessManager) {
     await initializeManagers();
@@ -101,6 +173,25 @@ export async function stopSlot(deploymentId: string, slot: Slot) {
   return globalProcessManager.stopSlot(deploymentId, slot);
 }
 
+/**
+ * Promote a deployment from preview slot to production slot.
+ *
+ * Atomically copies the entire preview slot state (including domain bindings)
+ * to the production slot and marks the deployment as 'promoted'. Fails if
+ * the preview slot is not in 'running' state.
+ *
+ * Calls the onPromoted hook if configured.
+ *
+ * @param deploymentId - The deployment UUID
+ * @returns The updated Deployment object with production slot now containing preview's state
+ * @throws Error if deployment not found, preview slot not running, or promotion fails
+ *
+ * @example
+ * ```typescript
+ * const promoted = await promote(deployment.id);
+ * console.log('Production slot:', promoted.slots.production);
+ * ```
+ */
 export async function promote(deploymentId: string) {
   if (!globalPromoteEngine) {
     await initializeManagers();
@@ -108,6 +199,24 @@ export async function promote(deploymentId: string) {
   return globalPromoteEngine.promote(deploymentId);
 }
 
+/**
+ * Rollback a promoted deployment by stopping the production slot.
+ *
+ * Transitions the production slot to 'stopped' status and sets the deployment
+ * status back to 'running'. Only allowed if deployment status is 'promoted'.
+ *
+ * Calls the onRollback hook if configured.
+ *
+ * @param deploymentId - The deployment UUID
+ * @returns The updated Deployment object with production slot now in 'stopped' state
+ * @throws Error if deployment not found, deployment not promoted, or rollback fails
+ *
+ * @example
+ * ```typescript
+ * const rolled = await rollback(deployment.id);
+ * console.log('Production slot stopped:', rolled.slots.production.status);
+ * ```
+ */
 export async function rollback(deploymentId: string) {
   if (!globalPromoteEngine) {
     await initializeManagers();
@@ -115,6 +224,24 @@ export async function rollback(deploymentId: string) {
   return globalPromoteEngine.rollback(deploymentId);
 }
 
+/**
+ * Bind a custom domain to a deployment slot.
+ *
+ * Stores the domain string on the specified slot. The platform is responsible
+ * for actually provisioning DNS records or certificates.
+ *
+ * Calls the onDomainBound hook if configured.
+ *
+ * @param deploymentId - The deployment UUID
+ * @param slot - The slot to bind to: 'preview' or 'production'
+ * @param domain - The domain name (e.g., 'example.com', 'api.example.com')
+ * @throws Error if deploymentId invalid, slot invalid, domain format invalid, or deployment not found
+ *
+ * @example
+ * ```typescript
+ * await bindDomain(deployment.id, 'preview', 'preview.example.com');
+ * ```
+ */
 export async function bindDomain(
   deploymentId: string,
   slot: Slot,
@@ -126,6 +253,21 @@ export async function bindDomain(
   return globalDomainManager.bindDomain(deploymentId, slot, domain);
 }
 
+/**
+ * Unbind a domain from a deployment slot.
+ *
+ * Removes the domain binding from the specified slot. The platform is responsible
+ * for cleaning up DNS records or certificates.
+ *
+ * @param deploymentId - The deployment UUID
+ * @param slot - The slot to unbind from: 'preview' or 'production'
+ * @throws Error if deploymentId invalid, slot invalid, or deployment not found
+ *
+ * @example
+ * ```typescript
+ * await unbindDomain(deployment.id, 'preview');
+ * ```
+ */
 export async function unbindDomain(deploymentId: string, slot: Slot) {
   if (!globalDomainManager) {
     await initializeManagers();
@@ -133,6 +275,20 @@ export async function unbindDomain(deploymentId: string, slot: Slot) {
   return globalDomainManager.unbindDomain(deploymentId, slot);
 }
 
+/**
+ * Get the domain bound to a deployment slot, if any.
+ *
+ * @param deploymentId - The deployment UUID
+ * @param slot - The slot to query: 'preview' or 'production'
+ * @returns The domain string if bound, or undefined if no domain is bound
+ * @throws Error if deploymentId invalid, slot invalid, or deployment not found
+ *
+ * @example
+ * ```typescript
+ * const domain = await getDomain(deployment.id, 'preview');
+ * console.log(domain); // 'preview.example.com' or undefined
+ * ```
+ */
 export async function getDomain(deploymentId: string, slot: Slot) {
   if (!globalDomainManager) {
     await initializeManagers();
