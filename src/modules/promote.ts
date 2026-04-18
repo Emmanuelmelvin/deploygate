@@ -34,13 +34,11 @@ export class PromoteEngine {
       throw error;
     }
 
-    deployment.status = 'promoting';
-    await this.store.set(deploymentId, deployment);
-
-    // Copy preview state to production
+    // Compute all state mutations in memory before persisting
     deployment.slots.production = { ...previewSlot };
     deployment.status = 'promoted';
 
+    // Commit all mutations in a single atomic write
     await this.store.set(deploymentId, deployment);
 
     logger.info(`Deployment ${deploymentId} promoted to production`);
@@ -65,10 +63,12 @@ export class PromoteEngine {
       throw error;
     }
 
+    // Compute all state mutations in memory before persisting
     deployment.slots.production.status = 'stopped';
     deployment.slots.production.stoppedAt = new Date();
     deployment.status = 'running';
 
+    // Commit all mutations in a single atomic write
     await this.store.set(deploymentId, deployment);
 
     logger.info(`Deployment ${deploymentId} rolled back from production`);
