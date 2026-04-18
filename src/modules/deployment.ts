@@ -3,6 +3,7 @@ import type { Deployment, DeploygateConfig, ProcessStatus } from '../types.js';
 import type { StateStore } from '../store/index.js';
 import { DeploygateError } from '../errors.js';
 import logger from '../logger.js';
+import { assertNonEmptyString } from '../utils/validate.js';
 
 export class DeploymentManager {
   constructor(private store: StateStore) {}
@@ -11,6 +12,7 @@ export class DeploymentManager {
     buildId: string,
     config?: DeploygateConfig
   ): Promise<Deployment> {
+    assertNonEmptyString(buildId, 'buildId');
     const deployment: Deployment = {
       id: uuidv4(),
       buildId,
@@ -36,6 +38,7 @@ export class DeploymentManager {
   }
 
   async getDeployment(id: string): Promise<Deployment | null> {
+    assertNonEmptyString(id, 'deploymentId');
     return this.store.get(id);
   }
 
@@ -47,6 +50,7 @@ export class DeploymentManager {
     id: string,
     patch: Partial<Deployment>
   ): Promise<Deployment> {
+    assertNonEmptyString(id, 'deploymentId');
     const deployment = await this.store.get(id);
     if (!deployment) {
       const error = new DeploygateError(

@@ -2,6 +2,7 @@ import type { Slot, DeploygateConfig } from '../types';
 import type { StateStore } from '../store/index';
 import { DeploygateError } from '../errors';
 import logger from '../logger';
+import { assertNonEmptyString, assertValidSlot, assertValidDomain } from '../utils/validate';
 
 export class DomainManager {
   constructor(
@@ -14,6 +15,9 @@ export class DomainManager {
     slot: Slot,
     domain: string
   ): Promise<void> {
+    assertNonEmptyString(deploymentId, 'deploymentId');
+    assertValidSlot(slot);
+    assertValidDomain(domain);
     const deployment = await this.store.get(deploymentId);
     if (!deployment) {
       const error = new DeploygateError(
@@ -39,6 +43,8 @@ export class DomainManager {
   }
 
   async unbindDomain(deploymentId: string, slot: Slot): Promise<void> {
+    assertNonEmptyString(deploymentId, 'deploymentId');
+    assertValidSlot(slot);
     const deployment = await this.store.get(deploymentId);
     if (!deployment) {
       const error = new DeploygateError(
@@ -63,6 +69,8 @@ export class DomainManager {
     deploymentId: string,
     slot: Slot
   ): Promise<string | undefined> {
+    assertNonEmptyString(deploymentId, 'deploymentId');
+    assertValidSlot(slot);
     const deployment = await this.store.get(deploymentId);
     if (!deployment) {
       const error = new DeploygateError(

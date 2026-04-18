@@ -1,8 +1,27 @@
+/**
+ * FileStore: File-based deployment state storage.
+ *
+ * ⚠️  DEVELOPMENT ONLY - NOT FOR PRODUCTION
+ *
+ * FileStore persists deployment state to a JSON file (`deployments.json`)
+ * in a configurable directory. It is intended for development and single-process
+ * testing only.
+ *
+ * LIMITATIONS:
+ * - NOT safe for concurrent access (multiple processes/requests writing simultaneously)
+ * - NOT fault-tolerant (network issues, partial writes, crashes can corrupt data)
+ * - NOT replicated or backed up
+ * - NOT scalable (entire state loaded into memory each operation)
+ * - Never intended for multi-instance or distributed deployments
+ *
+ * For production use, implement your own StateStore adapter backed by a
+ * proper database (PostgreSQL, MongoDB, etc.). See README.md for examples.
+ */
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
-import type { Deployment } from '../types.js';
-import type { StateStore } from './index.js';
+import type { Deployment } from '../types';
+import type { StateStore } from './index';
 
 const DEPLOYMENTS_FILE = 'deployments.json';
 

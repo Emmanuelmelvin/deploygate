@@ -2,6 +2,7 @@ import type { Slot } from '../types';
 import type { StateStore } from '../store/index';
 import { DeploygateError } from '../errors';
 import logger from '../logger';
+import { assertNonEmptyString, assertValidSlot } from '../utils/validate';
 
 export class ProcessManager {
   constructor(private store: StateStore) {}
@@ -11,6 +12,8 @@ export class ProcessManager {
     slot: Slot,
     port?: number
   ): Promise<void> {
+    assertNonEmptyString(deploymentId, 'deploymentId');
+    assertValidSlot(slot);
     const deployment = await this.store.get(deploymentId);
     if (!deployment) {
       const error = new DeploygateError(
@@ -47,6 +50,8 @@ export class ProcessManager {
   }
 
   async stopSlot(deploymentId: string, slot: Slot): Promise<void> {
+    assertNonEmptyString(deploymentId, 'deploymentId');
+    assertValidSlot(slot);
     const deployment = await this.store.get(deploymentId);
     if (!deployment) {
       const error = new DeploygateError(
@@ -80,6 +85,8 @@ export class ProcessManager {
   }
 
   async getSlotStatus(deploymentId: string, slot: Slot) {
+    assertNonEmptyString(deploymentId, 'deploymentId');
+    assertValidSlot(slot);
     const deployment = await this.store.get(deploymentId);
     if (!deployment) {
       const error = new DeploygateError(
@@ -96,6 +103,8 @@ export class ProcessManager {
   }
 
   async getLogs(deploymentId: string, slot: Slot): Promise<string[]> {
+    assertNonEmptyString(deploymentId, 'deploymentId');
+    assertValidSlot(slot);
     const deployment = await this.store.get(deploymentId);
     if (!deployment) {
       const error = new DeploygateError(

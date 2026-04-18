@@ -2,6 +2,7 @@ import type { Deployment, DeploygateConfig } from '../types';
 import type { StateStore } from '../store/index';
 import { DeploygateError } from '../errors';
 import logger from '../logger';
+import { assertNonEmptyString } from '../utils/validate';
 
 export class PromoteEngine {
   constructor(
@@ -10,6 +11,7 @@ export class PromoteEngine {
   ) {}
 
   async promote(deploymentId: string): Promise<Deployment> {
+    assertNonEmptyString(deploymentId, 'deploymentId');
     const deployment = await this.store.get(deploymentId);
     if (!deployment) {
       const error = new DeploygateError(
@@ -63,6 +65,7 @@ export class PromoteEngine {
   }
 
   async rollback(deploymentId: string): Promise<Deployment> {
+    assertNonEmptyString(deploymentId, 'deploymentId');
     const deployment = await this.store.get(deploymentId);
     if (!deployment) {
       const error = new DeploygateError(

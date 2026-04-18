@@ -99,6 +99,102 @@ export default {
 } as DeploygateConfig;
 ```
 
+## Implementing a Custom Store Adapter
+
+The built-in `FileStore` and `MemoryStore` adapters are provided for convenience during development and testing, but they are **not recommended for production use**.
+
+### Why implement a custom adapter?
+
+A production deployment system should persist state in a reliable, scalable database:
+- **Multi-instance deployments** require shared state accessible across multiple processes/servers
+- **High availability** requires replication and automated failover
+- **Data integrity** requires ACID guarantees and backup/recovery capabilities
+- **Scalability** requires efficient querying and indexing of large deployment datasets
+- **Observability** requires audit logs and transaction history
+
+By implementing the `StateStore` interface, you can integrate any database backend without modifying deploygate.
+
+### Minimal example: PostgreSQL adapter
+
+Here's a complete, working example of a minimal custom adapter using PostgreSQL:
+
+```typescript
+// my-postgres-store.ts
+import type { Deployment } from 'deploygate';
+import type { StateStore } from 'deploygate';
+import { Pool } from 'pg';
+
+export class PostgresStore implements StateStore {
+  private pool: Pool;
+
+  constructor(connectionString: string) {
+    this.pool = new Pool({ connectionString });
+  }
+
+  async get(id: string): Promise<Deployment | null> {
+    const result = await this.pool.query(
+      'SELECT deployment FROM deployments WHERE id = $1',
+      [id]
+    );
+    return result.rows[0]?.deployment || null;
+  }
+
+  async set(id: string, deployment: Deployment): Promise<void> {
+    await this.pool.query(
+      'INSERT INTO deployments (id, deployment) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET deployment = $2',
+      [id, JSON.stringify(deployment)]
+    );
+  }
+
+  async list(): Promise<Deployment[]> {
+    const result = await this.pool.query('SELECT deployment FROM deployments');
+    return result.rows.map(row => row.deployment);
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.pool.query('DELETE FROM deployments WHERE id = $1', [id]);
+  }
+}
+```
+
+### Using your custom adapter
+
+Pass your store instance to the config:
+
+```typescript
+import { createDeployment } from 'deploygate';
+import { PostgresStore } from './my-postgres-store';
+
+const store = new PostgresStore(process.env.DATABASE_URL!);
+
+// Create a deployment with the custom store
+const deployment = await createDeployment('build-123', { store });
+```
+
+Or configure it globally:
+
+```typescript
+// deploygate.config.ts
+import type { DeploygateConfig } from 'deploygate';
+import { PostgresStore } from './my-postgres-store';
+
+export default {
+  store: new PostgresStore(process.env.DATABASE_URL!),
+  hooks: {
+    // ...
+  },
+} as DeploygateConfig;
+```
+
+### Built-in adapters
+
+Deploygate includes two adapters for development and testing:
+
+- **MemoryStore**: Stores deployments in a JavaScript Map. State is lost when the process exits. (Default)
+- **FileStore**: Persists deployments to a JSON file. Single-process only, not safe for concurrent access.
+
+Both are provided for convenience but should not be used in production environments.
+
 ## State Store Adapters
 
 ### Memory Store (default)
