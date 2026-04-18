@@ -1,0 +1,18 @@
+{
+  "51e9ff41-07fe-42ae-80fb-723a670e11cd": {
+    "id": "51e9ff41-07fe-42ae-80fb-723a670e11cd",
+    "buildId": "build-1776528774294",
+    "createdAt": "2026-04-18T16:12:54.315Z",
+    "status": "building",
+    "slots": {
+      "preview": {
+        "status": "running",
+        "startedAt": "2026-04-18T16:12:54.849Z",
+        "port": 3000
+      },
+      "production": {
+        "status": "stopped"
+      }
+    }
+  }
+}
