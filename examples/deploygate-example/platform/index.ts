@@ -24,8 +24,6 @@ const config: DeploygateConfig = {
   hooks,
 };
 
-const distPaths = new Map<string, string>();
-
 const program = new Command();
 program.name('platform').description('Minimal hosting platform using deploygate').version('1.0.0');
 
@@ -42,11 +40,10 @@ program
 
     logger.step(2, 4, 'Creating deployment...');
     const buildId = `build-${Date.now()}`;
-    const deployment = await createDeployment(buildId, config);
+    const deployment = await createDeployment(buildId, config, distPath);
 
     logger.step(3, 4, 'Starting preview slot...');
     await startSlot(deployment.id, 'preview', 3000, config);
-    distPaths.set(deployment.id, distPath);
 
     logger.step(4, 4, 'Preview server running');
     logger.blank();
@@ -66,19 +63,22 @@ program
       process.exit(1);
     }
 
-    const distPath = distPaths.get(deploymentId);
+    const distPath = deployment.distPath;
     if (!distPath) {
-      logger.error(`Dist path not found for deployment ${deploymentId}`);
+      logger.error(`Dist path not stored in deployment ${deploymentId}`);
       process.exit(1);
     }
 
-    logger.step(1, 3, 'Promoting preview to production...');
+    logger.step(1, 4, 'Promoting preview to production...');
     await promote(deploymentId, config);
 
-    logger.step(2, 3, 'Starting production slot...');
+    logger.step(2, 4, 'Preparing production slot...');
+    await stopSlot(deploymentId, 'production', config);
     await startSlot(deploymentId, 'production', 3001, config);
 
-    logger.step(3, 3, 'Production server running');
+    logger.step(3, 4, 'Starting production server...');
+
+    logger.step(4, 4, 'Production server running');
     logger.blank();
     logger.indent(`Deployment ID    : ${deploymentId}`);
     logger.indent(`Production URL   : http://localhost:3001`);

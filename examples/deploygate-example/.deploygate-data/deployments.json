@@ -1,18 +1,22 @@
 {
-  "51e9ff41-07fe-42ae-80fb-723a670e11cd": {
-    "id": "51e9ff41-07fe-42ae-80fb-723a670e11cd",
-    "buildId": "build-1776528774294",
-    "createdAt": "2026-04-18T16:12:54.315Z",
-    "status": "building",
+  "c87c9afd-594b-4048-945f-e07981e91830": {
+    "id": "c87c9afd-594b-4048-945f-e07981e91830",
+    "buildId": "build-1776573812295",
+    "createdAt": "2026-04-19T04:43:32.299Z",
+    "status": "active",
     "slots": {
       "preview": {
         "status": "running",
-        "startedAt": "2026-04-18T16:12:54.849Z",
+        "startedAt": "2026-04-19T04:43:32.505Z",
         "port": 3000
       },
       "production": {
-        "status": "stopped"
+        "status": "running",
+        "startedAt": "2026-04-19T06:17:34.750Z",
+        "port": 3001,
+        "stoppedAt": "2026-04-19T06:17:34.715Z"
       }
-    }
+    },
+    "distPath": "react-app/dist"
   }
 }

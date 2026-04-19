@@ -1,7 +1,7 @@
 export type Slot = 'preview' | 'production';
 export type DeploymentStatus =
   | 'building'
-  | 'running'
+  | 'active'
   | 'promoting'
   | 'promoted'
   | 'failed'
@@ -23,6 +23,7 @@ export interface Deployment {
   createdAt: Date;
   status: DeploymentStatus;
   slots: Record<Slot, SlotState>;
+  distPath?: string;
 }
 
 export interface DeploygateHooks {

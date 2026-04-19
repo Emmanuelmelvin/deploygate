@@ -24,10 +24,10 @@ export class PromoteEngine {
       throw error;
     }
 
-    // Validate deployment state transition: only 'running' deployments can be promoted
-    if (deployment.status !== 'running') {
+    // Validate deployment state transition: only 'active' deployments can be promoted
+    if (deployment.status !== 'active') {
       const error = new DeploygateError(
-        `Cannot promote deployment ${deploymentId}: current status is '${deployment.status}'. Only deployments with status 'running' can be promoted.`,
+        `Cannot promote deployment ${deploymentId}: current status is '${deployment.status}'. Only deployments with status 'active' can be promoted.`,
         'PROMOTION_FAILED',
         400,
         { deploymentId, currentStatus: deployment.status }
@@ -93,7 +93,7 @@ export class PromoteEngine {
     // Compute all state mutations in memory before persisting
     deployment.slots.production.status = 'stopped';
     deployment.slots.production.stoppedAt = new Date();
-    deployment.status = 'running';
+    deployment.status = 'active';
 
     // Commit all mutations in a single atomic write
     await this.store.set(deploymentId, deployment);

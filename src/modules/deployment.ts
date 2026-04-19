@@ -1,16 +1,17 @@
 import { v4 as uuidv4 } from 'uuid';
-import type { Deployment, DeploygateConfig, ProcessStatus } from '../types.js';
-import type { StateStore } from '../store/index.js';
-import { DeploygateError } from '../errors.js';
-import logger from '../logger.js';
-import { assertNonEmptyString } from '../utils/validate.js';
+import type { Deployment, DeploygateConfig, ProcessStatus } from '../types';
+import type { StateStore } from '../store/index';
+import { DeploygateError } from '../errors';
+import logger from '../logger';
+import { assertNonEmptyString } from '../utils/validate';
 
 export class DeploymentManager {
   constructor(private store: StateStore) {}
 
   async createDeployment(
     buildId: string,
-    config?: DeploygateConfig
+    config?: DeploygateConfig,
+    distPath?: string
   ): Promise<Deployment> {
     assertNonEmptyString(buildId, 'buildId');
     const deployment: Deployment = {
@@ -26,6 +27,7 @@ export class DeploymentManager {
           status: 'stopped' as ProcessStatus,
         },
       },
+      distPath,
     };
 
     await this.store.set(deployment.id, deployment);

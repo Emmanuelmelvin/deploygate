@@ -40,6 +40,7 @@ export class ProcessManager {
       throw error;
     }
 
+    deployment.status = 'active';
     slotState.status = 'running';
     slotState.startedAt = new Date();
     if (port !== undefined) {

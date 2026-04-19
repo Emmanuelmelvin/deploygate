@@ -35,7 +35,7 @@ import { ProcessManager } from './modules/process';
 import { PromoteEngine } from './modules/promote';
 import { DomainManager } from './modules/domain';
 import { loadConfig } from './config';
-import type { DeploygateConfig, Slot, StateStore } from './types';
+import type { DeploygateConfig, Deployment, Slot, StateStore } from './types';
 
 let globalConfig: DeploygateConfig = {};
 let globalDeploymentManager: DeploymentManager;
@@ -72,6 +72,7 @@ async function initializeManagers(config?: DeploygateConfig) {
  *
  * @param buildId - Unique identifier for the build (e.g., "build-abc123")
  * @param config - Optional configuration object with custom store and hooks
+ * @param distPath - Optional path to dist folder containing index.html
  * @returns A new Deployment object with preview and production slots both in 'stopped' state
  * @throws Error if buildId is empty or not a string
  *
@@ -81,15 +82,16 @@ async function initializeManagers(config?: DeploygateConfig) {
  * const deployment = await createDeployment('build-123');
  * console.log(deployment.id); // UUID
  *
- * // Using custom store
- * const deployment = await createDeployment('build-123', { store: customStore });
+ * // With dist path
+ * const deployment = await createDeployment('build-123', config, './dist');
+ * console.log(deployment.distPath); // './dist'
  * ```
  */
-export async function createDeployment(buildId: string, config?: DeploygateConfig) {
+export async function createDeployment(buildId: string, config?: DeploygateConfig, distPath?: string) {
   if (!globalDeploymentManager || config?.store) {
     await initializeManagers(config);
   }
-  return globalDeploymentManager.createDeployment(buildId, globalConfig);
+  return globalDeploymentManager.createDeployment(buildId, config, distPath);
 }
 
 /**
@@ -113,6 +115,32 @@ export async function getDeployment(id: string, config?: DeploygateConfig) {
     await initializeManagers(config);
   }
   return globalDeploymentManager.getDeployment(id);
+}
+
+/**
+ * Update a deployment with partial data.
+ *
+ * @param id - The deployment UUID
+ * @param patch - Partial deployment object with fields to update
+ * @param config - Optional configuration object with custom store and hooks
+ * @returns The updated Deployment object
+ * @throws Error if deployment not found or id is invalid
+ *
+ * @example
+ * ```typescript
+ * const updated = await updateDeployment(deployment.id, { distPath: './dist' });
+ * console.log(updated.distPath);
+ * ```
+ */
+export async function updateDeployment(
+  id: string,
+  patch: Partial<Deployment>,
+  config?: DeploygateConfig
+) {
+  if (!globalDeploymentManager || config?.store) {
+    await initializeManagers(config);
+  }
+  return globalDeploymentManager.updateDeployment(id, patch);
 }
 
 /**
