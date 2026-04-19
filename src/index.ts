@@ -7,7 +7,19 @@ export {
   type DeploymentStatus,
   type DeploygateConfig,
   type DeploygateHooks,
+  type DeploymentHooks,
+  type SlotHooks,
+  type PromotionHooks,
+  type DomainHooks,
+  type DeploymentContext,
+  type SlotContext,
+  type PromotionContext,
+  type DomainContext,
+  type EventMap,
 } from './types';
+
+// Events and Hooks
+export { DeploygateEmitter, createEmitter } from './events';
 
 // State Store
 export { type StateStore } from './store/index';
@@ -163,6 +175,29 @@ export async function listDeployments(config?: DeploygateConfig) {
 }
 
 /**
+ * Pause a deployment.
+ *
+ * Sets the deployment status to 'paused'. Calls the onDeployPaused hook if configured.
+ *
+ * @param deploymentId - The deployment UUID
+ * @param config - Optional configuration object with custom store and hooks
+ * @returns The paused Deployment object
+ * @throws Error if deployment not found
+ *
+ * @example
+ * ```typescript
+ * const paused = await pauseDeployment(deployment.id);
+ * console.log(paused.status); // 'paused'
+ * ```
+ */
+export async function pauseDeployment(deploymentId: string, config?: DeploygateConfig) {
+  if (!globalDeploymentManager || config?.store) {
+    await initializeManagers(config);
+  }
+  return globalDeploymentManager.pauseDeployment(deploymentId, config);
+}
+
+/**
  * Start a deployment slot (preview or production).
  *
  * Transitions the slot from 'stopped' or 'crashed' to 'running' status.
@@ -207,7 +242,7 @@ export async function startSlot(
   if (!globalProcessManager || config?.store) {
     await initializeManagers(config);
   }
-  return globalProcessManager.startSlot(deploymentId, slot, port);
+  return globalProcessManager.startSlot(deploymentId, slot, port, config);
 }
 
 /**
@@ -230,7 +265,7 @@ export async function stopSlot(deploymentId: string, slot: Slot, config?: Deploy
   if (!globalProcessManager || config?.store) {
     await initializeManagers(config);
   }
-  return globalProcessManager.stopSlot(deploymentId, slot);
+  return globalProcessManager.stopSlot(deploymentId, slot, config);
 }
 
 /**

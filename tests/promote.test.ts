@@ -78,11 +78,11 @@ describe('PromoteEngine', () => {
   });
 
   it('calls onPromoted hook when provided', async () => {
-    let hookCalled = false;
+    let hookCalls: string[] = [];
     const config = {
       hooks: {
-        onPromoted: async () => {
-          hookCalled = true;
+        onPromoteSuccess: async () => {
+          hookCalls.push('success');
         },
       },
     };
@@ -103,15 +103,87 @@ describe('PromoteEngine', () => {
     });
 
     await engine.promote(deployment.id);
-    expect(hookCalled).toBe(true);
+    expect(hookCalls).toEqual(['success']);
+  });
+
+  it('onBeforePromote hook can cancel promotion by throwing', async () => {
+    let hookCalls: string[] = [];
+    const config = {
+      hooks: {
+        onBeforePromote: async () => {
+          hookCalls.push('before');
+          throw new Error('Promotion cancelled');
+        },
+      },
+    };
+
+    const engine = new PromoteEngine(store, config);
+    const deployment = await deploymentManager.createDeployment('build-cancel-promote');
+
+    // Set up running preview
+    await store.set(deployment.id, {
+      ...deployment,
+      slots: {
+        ...deployment.slots,
+        preview: {
+          ...deployment.slots.preview,
+          status: 'running',
+        },
+      },
+    });
+
+    await expect(engine.promote(deployment.id)).rejects.toThrow('Promotion cancelled');
+    expect(hookCalls).toEqual(['before']);
+  });
+
+  it('onPromoteFailed hook is called when promotion fails', async () => {
+    let failedError: Error | null = null;
+    const config = {
+      hooks: {
+        onPromoteFailed: async (context, error) => {
+          failedError = error;
+        },
+      },
+    };
+
+    const failingStore = {
+      get: async (id: string) => {
+        if (id === 'test-id') {
+          return {
+            id: 'test-id',
+            buildId: 'build-123',
+            createdAt: new Date(),
+            status: 'active',
+            slots: {
+              preview: { status: 'running' },
+              production: { status: 'stopped' },
+            },
+          };
+        }
+        return null;
+      },
+      set: async () => {
+        throw new Error('Store set failed');
+      },
+      list: async () => [],
+      delete: async () => {},
+    };
+
+    const engine = new PromoteEngine(failingStore, config);
+    await expect(engine.promote('test-id')).rejects.toThrow('Store set failed');
+    expect(failedError).toBeDefined();
+    expect(failedError?.message).toBe('Store set failed');
   });
 
   it('calls onRollback hook when provided', async () => {
-    let hookCalled = false;
+    let hookCalls: string[] = [];
     const config = {
       hooks: {
-        onRollback: async () => {
-          hookCalled = true;
+        onRollbackStart: async () => {
+          hookCalls.push('start');
+        },
+        onRollbackSuccess: async () => {
+          hookCalls.push('success');
         },
       },
     };
@@ -139,6 +211,42 @@ describe('PromoteEngine', () => {
     await store.set(deployment.id, promoted);
 
     await engine.rollback(deployment.id);
-    expect(hookCalled).toBe(true);
+    expect(hookCalls).toEqual(['start', 'success']);
+  });
+
+  it('onRollbackFailed hook is called when rollback fails', async () => {
+    let failedError: Error | null = null;
+    const config = {
+      hooks: {
+        onRollbackFailed: async (deployment, error) => {
+          failedError = error;
+        },
+      },
+    };
+
+    const failingStore = {
+      get: async (id: string) => {
+        return {
+          id,
+          buildId: 'build-123',
+          createdAt: new Date(),
+          status: 'promoted',
+          slots: {
+            preview: { status: 'running' },
+            production: { status: 'running' },
+          },
+        };
+      },
+      set: async () => {
+        throw new Error('Rollback store set failed');
+      },
+      list: async () => [],
+      delete: async () => {},
+    };
+
+    const engine = new PromoteEngine(failingStore, config);
+    await expect(engine.rollback('test-id')).rejects.toThrow('Rollback store set failed');
+    expect(failedError).toBeDefined();
+    expect(failedError?.message).toBe('Rollback store set failed');
   });
 });

@@ -62,13 +62,11 @@ describe('DomainManager', () => {
   });
 
   it('calls onDomainBound hook when provided', async () => {
-    let hookCalled = false;
-    let hookDomain = '';
+    let hookCalls: string[] = [];
     const config = {
       hooks: {
-        onDomainBound: async (_deployment: any, _slot: any, domain: string) => {
-          hookCalled = true;
-          hookDomain = domain;
+        onDomainBindSuccess: async () => {
+          hookCalls.push('success');
         },
       },
     };
@@ -78,7 +76,84 @@ describe('DomainManager', () => {
 
     await manager.bindDomain(deployment.id, 'production', 'prod.hook.com');
 
-    expect(hookCalled).toBe(true);
-    expect(hookDomain).toBe('prod.hook.com');
+    expect(hookCalls).toEqual(['success']);
+  });
+
+  it('onBeforeDomainBind hook can cancel binding by throwing', async () => {
+    const config = {
+      hooks: {
+        onBeforeDomainBind: async () => {
+          throw new Error('Domain binding cancelled');
+        },
+      },
+    };
+
+    const manager = new DomainManager(store, config);
+    const deployment = await deploymentManager.createDeployment('build-cancel-domain');
+
+    await expect(
+      manager.bindDomain(deployment.id, 'preview', 'cancel.example.com')
+    ).rejects.toThrow('Domain binding cancelled');
+
+    // Verify domain was not stored
+    const domain = await manager.getDomain(deployment.id, 'preview');
+    expect(domain).toBeUndefined();
+  });
+
+  it('onDomainBindFailed hook is called when binding fails', async () => {
+    let failedError: Error | null = null;
+    const config = {
+      hooks: {
+        onDomainBindFailed: async (context, error) => {
+          failedError = error;
+        },
+      },
+    };
+
+    const failingStore = {
+      get: async (id: string) => {
+        return {
+          id,
+          buildId: 'build-123',
+          createdAt: new Date(),
+          status: 'active',
+          slots: { preview: {}, production: {} },
+        };
+      },
+      set: async () => {
+        throw new Error('Domain bind store set failed');
+      },
+      list: async () => [],
+      delete: async () => {},
+    };
+
+    const manager = new DomainManager(failingStore, config);
+    await expect(
+      manager.bindDomain('test-id', 'preview', 'fail.example.com')
+    ).rejects.toThrow('Domain bind store set failed');
+
+    expect(failedError).toBeDefined();
+    expect(failedError?.message).toBe('Domain bind store set failed');
+  });
+
+  it('onDomainUnbind hook is called when domain is unbound', async () => {
+    let hookCalls: string[] = [];
+    const config = {
+      hooks: {
+        onDomainUnbind: async () => {
+          hookCalls.push('unbound');
+        },
+      },
+    };
+
+    const manager = new DomainManager(store, config);
+    const deployment = await deploymentManager.createDeployment('build-unbind');
+
+    await manager.bindDomain(deployment.id, 'preview', 'preview.example.com');
+    hookCalls.length = 0; // Reset
+
+    await manager.unbindDomain(deployment.id, 'preview');
+
+    expect(hookCalls).toEqual(['unbound']);
   });
 });

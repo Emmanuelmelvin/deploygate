@@ -66,17 +66,85 @@ describe('DeploymentManager', () => {
     ).rejects.toThrow();
   });
 
-  it('calls onCreated hook when provided', async () => {
-    let hookCalled = false;
+  it('onBeforeDeploy hook can cancel deployment by throwing', async () => {
     const config = {
       hooks: {
-        onCreated: async () => {
-          hookCalled = true;
+        onBeforeDeploy: async () => {
+          throw new Error('Deployment cancelled');
         },
       },
     };
 
-    await manager.createDeployment('build-with-hook', config);
-    expect(hookCalled).toBe(true);
+    await expect(
+      manager.createDeployment('build-cancelled', config)
+    ).rejects.toThrow('Deployment cancelled');
+
+    // Verify deployment was never stored
+    const list = await manager.listDeployments();
+    expect(list).toHaveLength(0);
+  });
+
+  it('onDeployStart and onDeploySuccess hooks are called on successful deployment', async () => {
+    const hookCalls: string[] = [];
+    const config = {
+      hooks: {
+        onDeployStart: async () => {
+          hookCalls.push('start');
+        },
+        onDeploySuccess: async () => {
+          hookCalls.push('success');
+        },
+      },
+    };
+
+    const deployment = await manager.createDeployment('build-success', config);
+    expect(deployment.status).toBe('active');
+    expect(hookCalls).toEqual(['start', 'success']);
+  });
+
+  it('onDeployFailed hook is called when deployment fails', async () => {
+    let failedError: Error | null = null;
+    const config = {
+      hooks: {
+        onDeployFailed: async (context, error) => {
+          failedError = error;
+        },
+      },
+    };
+
+    // Create a scenario where store.set fails
+    const failingStore = {
+      get: async () => null,
+      set: async () => {
+        throw new Error('Store operation failed');
+      },
+      list: async () => [],
+      delete: async () => {},
+    };
+
+    const failingManager = new DeploymentManager(failingStore);
+    await expect(
+      failingManager.createDeployment('build-failed', config)
+    ).rejects.toThrow('Store operation failed');
+
+    expect(failedError).toBeDefined();
+    expect(failedError?.message).toBe('Store operation failed');
+  });
+
+  it('pauseDeployment sets status to paused and calls onDeployPaused', async () => {
+    const hookCalls: string[] = [];
+    const config = {
+      hooks: {
+        onDeployPaused: async () => {
+          hookCalls.push('paused');
+        },
+      },
+    };
+
+    const created = await manager.createDeployment('build-pause', config);
+    const paused = await manager.pauseDeployment(created.id, config);
+
+    expect(paused.status).toBe('paused');
+    expect(hookCalls).toEqual(['paused']);
   });
 });

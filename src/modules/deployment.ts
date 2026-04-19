@@ -1,9 +1,10 @@
 import { v4 as uuidv4 } from 'uuid';
-import type { Deployment, DeploygateConfig, ProcessStatus } from '../types';
+import type { Deployment, DeploygateConfig, ProcessStatus, DeploymentContext } from '../types';
 import type { StateStore } from '../store/index';
 import { DeploygateError } from '../errors';
 import logger from '../logger';
 import { assertNonEmptyString } from '../utils/validate';
+import { runHook } from '../hooks';
 
 export class DeploymentManager {
   constructor(private store: StateStore) {}
@@ -14,6 +15,16 @@ export class DeploymentManager {
     distPath?: string
   ): Promise<Deployment> {
     assertNonEmptyString(buildId, 'buildId');
+    const context: DeploymentContext = { buildId, config };
+
+    // Cancellable before hook
+    try {
+      await runHook(config?.hooks, 'onBeforeDeploy', context);
+    } catch (error) {
+      logger.error(error);
+      throw error;
+    }
+
     const deployment: Deployment = {
       id: uuidv4(),
       buildId,
@@ -30,11 +41,50 @@ export class DeploymentManager {
       distPath,
     };
 
-    await this.store.set(deployment.id, deployment);
-
-    if (config?.hooks?.onCreated) {
-      await config.hooks.onCreated(deployment);
+    try {
+      await this.store.set(deployment.id, deployment);
+      await runHook(config?.hooks, 'onDeployStart', deployment);
+      
+      deployment.status = 'active';
+      await this.store.set(deployment.id, deployment);
+      
+      await runHook(config?.hooks, 'onDeploySuccess', deployment);
+    } catch (error) {
+      if (deployment.id) {
+        try {
+          const failed = await this.store.get(deployment.id);
+          if (failed) {
+            failed.status = 'failed';
+            await this.store.set(deployment.id, failed);
+          }
+        } catch {
+          // Ignore cleanup errors
+        }
+      }
+      await runHook(config?.hooks, 'onDeployFailed', context, error as Error);
+      throw error;
     }
+
+    return deployment;
+  }
+
+  async pauseDeployment(id: string, config?: DeploygateConfig): Promise<Deployment> {
+    assertNonEmptyString(id, 'deploymentId');
+    const deployment = await this.store.get(id);
+    if (!deployment) {
+      const error = new DeploygateError(
+        `Deployment with id ${id} not found`,
+        'DEPLOYMENT_NOT_FOUND',
+        404,
+        { deploymentId: id }
+      );
+      logger.error(error);
+      throw error;
+    }
+
+    deployment.status = 'paused';
+    await this.store.set(id, deployment);
+    await runHook(config?.hooks, 'onDeployPaused', deployment);
 
     return deployment;
   }

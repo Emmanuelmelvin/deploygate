@@ -1,8 +1,9 @@
-import type { Slot, DeploygateConfig } from '../types';
+import type { Slot, DeploygateConfig, DomainContext } from '../types';
 import type { StateStore } from '../store/index';
 import { DeploygateError } from '../errors';
 import logger from '../logger';
 import { assertNonEmptyString, assertValidSlot, assertValidDomain } from '../utils/validate';
+import { runHook } from '../hooks';
 
 export class DomainManager {
   constructor(
@@ -30,15 +31,28 @@ export class DomainManager {
       throw error;
     }
 
-    deployment.slots[slot].domain = domain;
-    await this.store.set(deploymentId, deployment);
+    const context: DomainContext = { deployment, slot, domain };
 
-    logger.info(
-      `Domain ${domain} bound to ${slot} slot of deployment ${deploymentId}`
-    );
+    // Cancellable before hook
+    try {
+      await runHook(this.config?.hooks, 'onBeforeDomainBind', context);
+    } catch (error) {
+      logger.error(error);
+      throw error;
+    }
 
-    if (this.config?.hooks?.onDomainBound) {
-      await this.config.hooks.onDomainBound(deployment, slot, domain);
+    try {
+      deployment.slots[slot].domain = domain;
+      await this.store.set(deploymentId, deployment);
+
+      logger.info(
+        `Domain ${domain} bound to ${slot} slot of deployment ${deploymentId}`
+      );
+
+      await runHook(this.config?.hooks, 'onDomainBindSuccess', context);
+    } catch (error) {
+      await runHook(this.config?.hooks, 'onDomainBindFailed', context, error as Error);
+      throw error;
     }
   }
 
@@ -57,12 +71,17 @@ export class DomainManager {
       throw error;
     }
 
+    const currentDomain = deployment.slots[slot].domain || '';
+    const context: DomainContext = { deployment, slot, domain: currentDomain };
+
     delete deployment.slots[slot].domain;
     await this.store.set(deploymentId, deployment);
 
     logger.info(
       `Domain unbound from ${slot} slot of deployment ${deploymentId}`
     );
+
+    await runHook(this.config?.hooks, 'onDomainUnbind', context);
   }
 
   async getDomain(

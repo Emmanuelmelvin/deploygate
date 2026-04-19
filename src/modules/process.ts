@@ -1,8 +1,9 @@
-import type { Slot } from '../types';
+import type { Slot, DeploygateConfig, SlotContext } from '../types';
 import type { StateStore } from '../store/index';
 import { DeploygateError } from '../errors';
 import logger from '../logger';
 import { assertNonEmptyString, assertValidSlot } from '../utils/validate';
+import { runHook } from '../hooks';
 
 export class ProcessManager {
   constructor(private store: StateStore) {}
@@ -10,7 +11,8 @@ export class ProcessManager {
   async startSlot(
     deploymentId: string,
     slot: Slot,
-    port?: number
+    port?: number,
+    config?: DeploygateConfig
   ): Promise<void> {
     assertNonEmptyString(deploymentId, 'deploymentId');
     assertValidSlot(slot);
@@ -27,6 +29,7 @@ export class ProcessManager {
     }
 
     const slotState = deployment.slots[slot];
+    const context: SlotContext = { deployment, slot, port };
 
     // Validate slot state transition: only 'stopped' or 'crashed' slots can be started
     if (slotState.status !== 'stopped' && slotState.status !== 'crashed') {
@@ -40,17 +43,35 @@ export class ProcessManager {
       throw error;
     }
 
-    deployment.status = 'active';
-    slotState.status = 'running';
-    slotState.startedAt = new Date();
-    if (port !== undefined) {
-      slotState.port = port;
+    // Cancellable before hook
+    try {
+      await runHook(config?.hooks, 'onBeforeSlotStart', context);
+    } catch (error) {
+      logger.error(error);
+      throw error;
     }
 
-    await this.store.set(deploymentId, deployment);
+    try {
+      deployment.status = 'active';
+      slotState.status = 'running';
+      slotState.startedAt = new Date();
+      if (port !== undefined) {
+        slotState.port = port;
+      }
+
+      await this.store.set(deploymentId, deployment);
+      await runHook(config?.hooks, 'onSlotStart', context);
+    } catch (error) {
+      await runHook(config?.hooks, 'onSlotCrashed', context, error as Error);
+      throw error;
+    }
   }
 
-  async stopSlot(deploymentId: string, slot: Slot): Promise<void> {
+  async stopSlot(
+    deploymentId: string,
+    slot: Slot,
+    config?: DeploygateConfig
+  ): Promise<void> {
     assertNonEmptyString(deploymentId, 'deploymentId');
     assertValidSlot(slot);
     const deployment = await this.store.get(deploymentId);
@@ -66,6 +87,7 @@ export class ProcessManager {
     }
 
     const slotState = deployment.slots[slot];
+    const context: SlotContext = { deployment, slot };
 
     // Validate slot state transition: only 'running' or 'starting' slots can be stopped
     if (slotState.status !== 'running' && slotState.status !== 'starting') {
@@ -83,6 +105,7 @@ export class ProcessManager {
     slotState.stoppedAt = new Date();
 
     await this.store.set(deploymentId, deployment);
+    await runHook(config?.hooks, 'onSlotStop', context);
   }
 
   async getSlotStatus(deploymentId: string, slot: Slot) {

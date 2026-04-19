@@ -82,22 +82,268 @@ export default {
 
   // Lifecycle hooks
   hooks: {
-    onCreated: async (deployment) => {
-      console.log(`Created deployment ${deployment.id}`);
+    // Deployment hooks
+    onBeforeDeploy: async (context) => {
+      // Runs before a deployment is created
+      // Throw to cancel the deployment
+      console.log(`Creating deployment for build ${context.buildId}`);
     },
-    onPromoted: async (deployment) => {
-      console.log(`Promoted ${deployment.id} to production`);
+    onDeployStart: async (deployment) => {
+      // Runs after deployment is created but before it's marked as active
+      console.log(`Deployment ${deployment.id} created, initializing slots `);
+    },
+    onDeploySuccess: async (deployment) => {
+      // Runs after deployment is fully initialized
+      console.log(`Deployment ${deployment.id} ready`);
+    },
+    onDeployFailed: async (context, error) => {
+      // Runs if deployment fails at any step
+      console.error(`Deployment failed: ${error.message}`);
+    },
+    onDeployPaused: async (deployment) => {
+      // Runs when deployment is paused
+      console.log(`Deployment ${deployment.id} paused`);
+    },
+
+    // Slot lifecycle hooks
+    onBeforeSlotStart: async (context) => {
+      // Runs before a slot is started
+      // Throw to cancel starting the slot
+      console.log(`Starting ${context.slot} slot on port ${context.port}`);
+    },
+    onSlotStart: async (context) => {
+      // Runs after a slot has successfully started
+      console.log(`${context.slot} slot started`);
+    },
+    onSlotStop: async (context) => {
+      // Runs after a slot has been stopped
+      console.log(`${context.slot} slot stopped`);
+    },
+    onSlotCrashed: async (context, error) => {
+      // Runs if a slot fails to start
+      console.error(`${context.slot} slot crashed: ${error.message}`);
+    },
+
+    // Promotion lifecycle hooks
+    onBeforePromote: async (context) => {
+      // Runs before promotion
+      // Throw to cancel the promotion
+      console.log(`Promoting deployment ${context.deployment.id} to production`);
+    },
+    onPromoteSuccess: async (deployment) => {
+      // Runs after successful promotion
+      console.log(`Successfully promoted ${deployment.id}`);
       // Trigger notifications, analytics, etc.
     },
-    onRollback: async (deployment) => {
-      console.log(`Rolled back deployment ${deployment.id}`);
+    onPromoteFailed: async (context, error) => {
+      // Runs if promotion fails
+      console.error(`Promotion failed: ${error.message}`);
     },
-    onDomainBound: async (deployment, slot, domain) => {
-      console.log(`Bound ${domain} to ${slot} slot`);
+    onRollbackStart: async (deployment) => {
+      // Runs before rollback begins
+      console.log(`Rolling back deployment ${deployment.id}`);
+    },
+    onRollbackSuccess: async (deployment) => {
+      // Runs after successful rollback
+      console.log(`Successfully rolled back ${deployment.id}`);
+    },
+    onRollbackFailed: async (deployment, error) => {
+      // Runs if rollback fails
+      console.error(`Rollback failed: ${error.message}`);
+    },
+
+    // Domain lifecycle hooks
+    onBeforeDomainBind: async (context) => {
+      // Runs before domain binding
+      // Throw to cancel the binding
+      console.log(`Binding ${context.domain} to ${context.slot} slot`);
+    },
+    onDomainBindSuccess: async (context) => {
+      // Runs after successful domain binding
+      console.log(`Successfully bound ${context.domain}`);
+    },
+    onDomainBindFailed: async (context, error) => {
+      // Runs if domain binding fails
+      console.error(`Domain binding failed: ${error.message}`);
+    },
+    onDomainUnbind: async (context) => {
+      // Runs after domain unbinding
+      console.log(`Unbound ${context.domain} from ${context.slot} slot`);
     },
   },
 } as DeploygateConfig;
 ```
+
+## Lifecycle Hooks
+
+Deploygate provides a comprehensive hook system for integrating with your hosting platform. All hooks are optional — omit any you don't need.
+
+### Hook lifecycle table
+
+| Hook | Stage | Cancellable | Receives |
+|------|-------|-------------|----------|
+| `onBeforeDeploy` | Before deployment creation | ✓ Yes (throw) | `DeploymentContext` |
+| `onDeployStart` | After deployment created | ✗ No | `Deployment` |
+| `onDeploySuccess` | After deployment ready | ✗ No | `Deployment` |
+| `onDeployFailed` | On deployment error | ✗ No | `DeploymentContext`, `Error` |
+| `onDeployPaused` | After pause | ✗ No | `Deployment` |
+| `onBeforeSlotStart` | Before slot starts | ✓ Yes (throw) | `SlotContext` |
+| `onSlotStart` | After slot started | ✗ No | `SlotContext` |
+| `onSlotStop` | After slot stopped | ✗ No | `SlotContext` |
+| `onSlotCrashed` | On slot start failure | ✗ No | `SlotContext`, `Error` |
+| `onBeforePromote` | Before promotion | ✓ Yes (throw) | `PromotionContext` |
+| `onPromoteSuccess` | After promotion | ✗ No | `Deployment` |
+| `onPromoteFailed` | On promotion error | ✗ No | `PromotionContext`, `Error` |
+| `onRollbackStart` | Before rollback | ✗ No | `Deployment` |
+| `onRollbackSuccess` | After rollback | ✗ No | `Deployment` |
+| `onRollbackFailed` | On rollback error | ✗ No | `Deployment`, `Error` |
+| `onBeforeDomainBind` | Before domain bind | ✓ Yes (throw) | `DomainContext` |
+| `onDomainBindSuccess` | After domain bind | ✗ No | `DomainContext` |
+| `onDomainBindFailed` | On domain bind error | ✗ No | `DomainContext`, `Error` |
+| `onDomainUnbind` | After domain unbind | ✗ No | `DomainContext` |
+
+### Cancellable hooks
+
+**Before hooks** (`onBeforeDeploy`, `onBeforeSlotStart`, `onBeforePromote`, `onBeforeDomainBind`) can cancel operations by throwing an error:
+
+```typescript
+const config: DeploygateConfig = {
+  hooks: {
+    onBeforeDeploy: async (context) => {
+      // Validate build ID before creating deployment
+      if (!context.buildId.startsWith('build-')) {
+        throw new Error('Invalid build ID format');
+      }
+      // If we throw, createDeployment() will reject with this error
+      // and the deployment will not be created
+    },
+  },
+};
+
+try {
+  const deployment = await createDeployment('invalid-build', config);
+} catch (error) {
+  console.error(error.message); // "Invalid build ID format"
+}
+```
+
+### Context types
+
+Hooks receive rich context objects without exposing internal state:
+
+```typescript
+// DeploymentContext
+interface DeploymentContext {
+  buildId: string;
+  config?: DeploygateConfig;
+}
+
+// SlotContext
+interface SlotContext {
+  deployment: Deployment;
+  slot: Slot;
+  port?: number;
+}
+
+// PromotionContext
+interface PromotionContext {
+  deployment: Deployment;
+}
+
+// DomainContext
+interface DomainContext {
+  deployment: Deployment;
+  slot: Slot;
+  domain: string;
+}
+```
+
+### Complete example
+
+```typescript
+import { createDeployment, startSlot, promote, rollback, bindDomain } from 'deploygate';
+import type { DeploygateConfig } from 'deploygate';
+
+const config: DeploygateConfig = {
+  adapter: 'file',
+  dataDir: './deployments',
+  hooks: {
+    onBeforeDeploy: async (context) => {
+      console.log(`[deployment] Creating for build ${context.buildId}`);
+      // Validate, prepare infrastructure, etc.
+    },
+    onDeploySuccess: async (deployment) => {
+      console.log(`[deployment] Ready: ${deployment.id}`);
+      // Notify team, log metrics, etc.
+    },
+    onBeforeSlotStart: async (context) => {
+      console.log(`[slot] Starting ${context.slot} on :${context.port}`);
+      // Allocate resources, setup networking, etc.
+    },
+    onSlotStart: async (context) => {
+      console.log(`[slot] ${context.slot} is running`);
+      // Run smoke tests, warmup, etc.
+    },
+    onBeforePromote: async (context) => {
+      console.log(`[promotion] Promoting ${context.deployment.id}`);
+      // Final pre-promotion validation
+    },
+    onPromoteSuccess: async (deployment) => {
+      console.log(`[promotion] Complete: now on production`);
+      // Send notifications, update dashboard, etc.
+    },
+  },
+};
+
+// Create deployment
+const deployment = await createDeployment('build-abc123', config);
+
+// Start preview
+await startSlot(deployment.id, 'preview', 3000, config);
+
+// After testing in preview...
+await promote(deployment.id, config);
+
+// If needed, rollback
+await rollback(deployment.id, config);
+```
+
+### Custom events (advanced)
+
+For platform-specific events beyond the standard lifecycle, use custom events:
+
+```typescript
+import { createEmitter } from 'deploygate';
+import type { EventMap } from 'deploygate';
+
+// Declare your custom event map
+interface MyPlatformEvents extends EventMap {
+  'ssl:provisioned': (domain: string) => Promise<void>;
+  'analytics:tracked': (deploymentId: string, event: string) => Promise<void>;
+}
+
+// Create a typed emitter
+const emitter = createEmitter<MyPlatformEvents>();
+
+// Register handlers
+emitter.on('ssl:provisioned', async (domain) => {
+  console.log(`SSL certificate provisioned for ${domain}`);
+});
+
+emitter.on('analytics:tracked', async (deploymentId, event) => {
+  console.log(`Event: ${event} for deployment ${deploymentId}`);
+});
+
+// Emit events
+await emitter.emit('ssl:provisioned', 'example.com');
+await emitter.emit('analytics:tracked', deployment.id, 'promoted');
+
+// Remove handlers
+emitter.off('ssl:provisioned', handler);
+emitter.offAll('analytics:tracked');
+```
+
+
 
 ## Implementing a Custom Store Adapter
 

@@ -1,8 +1,9 @@
-import type { Deployment, DeploygateConfig } from '../types';
+import type { Deployment, DeploygateConfig, PromotionContext } from '../types';
 import type { StateStore } from '../store/index';
 import { DeploygateError } from '../errors';
 import logger from '../logger';
 import { assertNonEmptyString } from '../utils/validate';
+import { runHook } from '../hooks';
 
 export class PromoteEngine {
   constructor(
@@ -48,17 +49,29 @@ export class PromoteEngine {
       throw error;
     }
 
-    // Compute all state mutations in memory before persisting
-    deployment.slots.production = { ...previewSlot };
-    deployment.status = 'promoted';
+    const context: PromotionContext = { deployment };
 
-    // Commit all mutations in a single atomic write
-    await this.store.set(deploymentId, deployment);
+    // Cancellable before hook
+    try {
+      await runHook(this.config?.hooks, 'onBeforePromote', context);
+    } catch (error) {
+      logger.error(error);
+      throw error;
+    }
 
-    logger.info(`Deployment ${deploymentId} promoted to production`);
+    try {
+      // Compute all state mutations in memory before persisting
+      deployment.slots.production = { ...previewSlot };
+      deployment.status = 'promoted';
 
-    if (this.config?.hooks?.onPromoted) {
-      await this.config.hooks.onPromoted(deployment);
+      // Commit all mutations in a single atomic write
+      await this.store.set(deploymentId, deployment);
+
+      logger.info(`Deployment ${deploymentId} promoted to production`);
+      await runHook(this.config?.hooks, 'onPromoteSuccess', deployment);
+    } catch (error) {
+      await runHook(this.config?.hooks, 'onPromoteFailed', context, error as Error);
+      throw error;
     }
 
     return deployment;
@@ -90,18 +103,22 @@ export class PromoteEngine {
       throw error;
     }
 
-    // Compute all state mutations in memory before persisting
-    deployment.slots.production.status = 'stopped';
-    deployment.slots.production.stoppedAt = new Date();
-    deployment.status = 'active';
+    try {
+      await runHook(this.config?.hooks, 'onRollbackStart', deployment);
 
-    // Commit all mutations in a single atomic write
-    await this.store.set(deploymentId, deployment);
+      // Compute all state mutations in memory before persisting
+      deployment.slots.production.status = 'stopped';
+      deployment.slots.production.stoppedAt = new Date();
+      deployment.status = 'active';
 
-    logger.info(`Deployment ${deploymentId} rolled back from production`);
+      // Commit all mutations in a single atomic write
+      await this.store.set(deploymentId, deployment);
 
-    if (this.config?.hooks?.onRollback) {
-      await this.config.hooks.onRollback(deployment);
+      logger.info(`Deployment ${deploymentId} rolled back from production`);
+      await runHook(this.config?.hooks, 'onRollbackSuccess', deployment);
+    } catch (error) {
+      await runHook(this.config?.hooks, 'onRollbackFailed', deployment, error as Error);
+      throw error;
     }
 
     return deployment;
