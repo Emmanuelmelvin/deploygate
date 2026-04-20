@@ -13,7 +13,7 @@ describe('DeploymentManager', () => {
 
   it('createDeployment creates a deployment with correct initial shape', async () => {
     const buildId = 'build-123';
-    const deployment = await manager.createDeployment(buildId);
+    const deployment = await manager.createDeployment(buildId, 'tmp/dist');
 
     expect(deployment).toBeDefined();
     expect(deployment.id).toBeTruthy();
@@ -28,7 +28,7 @@ describe('DeploymentManager', () => {
 
   it('getDeployment retrieves a created deployment', async () => {
     const buildId = 'build-456';
-    const created = await manager.createDeployment(buildId);
+    const created = await manager.createDeployment(buildId, 'tmp/dist');
 
     const retrieved = await manager.getDeployment(created.id);
     expect(retrieved).toEqual(created);
@@ -40,8 +40,8 @@ describe('DeploymentManager', () => {
   });
 
   it('listDeployments returns all deployments', async () => {
-    const d1 = await manager.createDeployment('build-1');
-    const d2 = await manager.createDeployment('build-2');
+    const d1 = await manager.createDeployment('build-1', 'tmp/dist');
+    const d2 = await manager.createDeployment('build-2', 'tmp/dist');
 
     const list = await manager.listDeployments();
     expect(list).toHaveLength(2);
@@ -50,19 +50,19 @@ describe('DeploymentManager', () => {
   });
 
   it('updateDeployment modifies a deployment', async () => {
-    const created = await manager.createDeployment('build-789');
+    const created = await manager.createDeployment('build-789', 'tmp/dist');
 
     const updated = await manager.updateDeployment(created.id, {
-      status: 'running',
+      status: 'active',
     });
 
-    expect(updated.status).toBe('running');
+    expect(updated.status).toBe('active');
     expect(updated.id).toBe(created.id);
   });
 
   it('updateDeployment throws for non-existent deployment', async () => {
     await expect(
-      manager.updateDeployment('non-existent', { status: 'running' })
+      manager.updateDeployment('non-existent', { status: 'active' })
     ).rejects.toThrow();
   });
 
@@ -76,7 +76,7 @@ describe('DeploymentManager', () => {
     };
 
     await expect(
-      manager.createDeployment('build-cancelled', config)
+      manager.createDeployment('build-cancelled', 'tmp/dist', config)
     ).rejects.toThrow('Deployment cancelled');
 
     // Verify deployment was never stored
@@ -97,7 +97,7 @@ describe('DeploymentManager', () => {
       },
     };
 
-    const deployment = await manager.createDeployment('build-success', config);
+    const deployment = await manager.createDeployment('build-success', 'tmp/dist', config);
     expect(deployment.status).toBe('active');
     expect(hookCalls).toEqual(['start', 'success']);
   });
@@ -106,7 +106,7 @@ describe('DeploymentManager', () => {
     let failedError: Error | null = null;
     const config = {
       hooks: {
-        onDeployFailed: async (context, error) => {
+        onDeployFailed: async ( error: any) => {
           failedError = error;
         },
       },
@@ -124,11 +124,11 @@ describe('DeploymentManager', () => {
 
     const failingManager = new DeploymentManager(failingStore);
     await expect(
-      failingManager.createDeployment('build-failed', config)
+      failingManager.createDeployment('build-failed', 'tmp/dist',  config)
     ).rejects.toThrow('Store operation failed');
 
     expect(failedError).toBeDefined();
-    expect(failedError?.message).toBe('Store operation failed');
+    expect((failedError as unknown as Error).message).toBe('Store operation failed');
   });
 
   it('pauseDeployment sets status to paused and calls onDeployPaused', async () => {
@@ -141,7 +141,7 @@ describe('DeploymentManager', () => {
       },
     };
 
-    const created = await manager.createDeployment('build-pause', config);
+    const created = await manager.createDeployment('build-pause', 'tmp/dist', config);
     const paused = await manager.pauseDeployment(created.id, config);
 
     expect(paused.status).toBe('paused');

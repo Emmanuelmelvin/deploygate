@@ -15,9 +15,9 @@ describe('ProcessManager', () => {
   });
 
   it('startSlot sets status to running and assigns port', async () => {
-    const deployment = await deploymentManager.createDeployment('build-123');
+    const deployment = await deploymentManager.createDeployment('build-123', '/tmp/dist');
 
-    await processManager.startSlot(deployment.id, 'preview');
+    await processManager.startSlot(deployment.id, 'preview', 3000);
 
     const updated = await store.get(deployment.id);
     expect(updated?.slots.preview.status).toBe('running');
@@ -26,9 +26,9 @@ describe('ProcessManager', () => {
   });
 
   it('startSlot assigns correct port for production slot', async () => {
-    const deployment = await deploymentManager.createDeployment('build-456');
+    const deployment = await deploymentManager.createDeployment('build-456', '/tmp/dist');
 
-    await processManager.startSlot(deployment.id, 'production');
+    await processManager.startSlot(deployment.id, 'production', 3001);
 
     const updated = await store.get(deployment.id);
     expect(updated?.slots.production.status).toBe('running');
@@ -36,7 +36,7 @@ describe('ProcessManager', () => {
   });
 
   it('stopSlot sets status to stopped', async () => {
-    const deployment = await deploymentManager.createDeployment('build-789');
+    const deployment = await deploymentManager.createDeployment('build-789', '/tmp/dist');
 
     await processManager.startSlot(deployment.id, 'preview');
     await processManager.stopSlot(deployment.id, 'preview');
@@ -47,9 +47,9 @@ describe('ProcessManager', () => {
   });
 
   it('getSlotStatus returns the current slot state', async () => {
-    const deployment = await deploymentManager.createDeployment('build-status');
+    const deployment = await deploymentManager.createDeployment('build-status', '/tmp/dist');
 
-    await processManager.startSlot(deployment.id, 'preview');
+    await processManager.startSlot(deployment.id, 'preview', 3000);
     const status = await processManager.getSlotStatus(deployment.id, 'preview');
 
     expect(status.status).toBe('running');
@@ -57,7 +57,7 @@ describe('ProcessManager', () => {
   });
 
   it('getLogs returns mock log lines', async () => {
-    const deployment = await deploymentManager.createDeployment('build-logs');
+    const deployment = await deploymentManager.createDeployment('build-logs', '/tmp/dist');
 
     const logs = await processManager.getLogs(deployment.id, 'preview');
 

@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+import type { DeploymentStatus, ProcessStatus } from '../src/types';
 import { MemoryStore } from '../src/store/memory';
 import { DeploymentManager } from '../src/modules/deployment';
 import { PromoteEngine } from '../src/modules/promote';
@@ -15,40 +16,48 @@ describe('PromoteEngine', () => {
   });
 
   it('promote throws if preview slot is not running', async () => {
-    const deployment = await deploymentManager.createDeployment('build-123');
+    const deployment = await deploymentManager.createDeployment('build-123', '/tmp/dist');
 
     await expect(promoteEngine.promote(deployment.id)).rejects.toThrow(
       /preview slot is not running/
     );
   });
 
-  it('promote successfully copies preview state to production', async () => {
-    const deployment = await deploymentManager.createDeployment('build-456');
+  it('promote successfully copies preview state to production with explicit status and startedAt', async () => {
+    const deployment = await deploymentManager.createDeployment('build-456', '/tmp/dist');
+    const previewStartTime = new Date('2024-01-01T00:00:00Z');
 
     // Start preview slot
     await store.set(deployment.id, {
       ...deployment,
+      status: 'active',
       slots: {
         ...deployment.slots,
         preview: {
           ...deployment.slots.preview,
           status: 'running',
           port: 3000,
-          startedAt: new Date(),
+          startedAt: previewStartTime,
         },
       },
     });
 
+    const promotedTime = new Date();
     const promoted = await promoteEngine.promote(deployment.id);
 
     expect(promoted.status).toBe('promoted');
     expect(promoted.slots.production.status).toBe('running');
     expect(promoted.slots.production.port).toBe(3000);
+    // New startedAt should be set during promotion, not copied from preview
     expect(promoted.slots.production.startedAt).toBeDefined();
+    expect(promoted.slots.production.startedAt).not.toEqual(previewStartTime);
+    expect((promoted.slots.production.startedAt as Date).getTime()).toBeGreaterThanOrEqual(
+      promotedTime.getTime()
+    );
   });
 
-  it('rollback resets production slot', async () => {
-    const deployment = await deploymentManager.createDeployment('build-789');
+  it('rollback resets production slot with explicit status and stoppedAt', async () => {
+    const deployment = await deploymentManager.createDeployment('build-789', '/tmp/dist');
 
     // Set up a promoted state
     const promoted = {
@@ -70,11 +79,15 @@ describe('PromoteEngine', () => {
 
     await store.set(deployment.id, promoted);
 
+    const rollbackTime = new Date();
     const rolledBack = await promoteEngine.rollback(deployment.id);
 
-    expect(rolledBack.status).toBe('running');
+    expect(rolledBack.status).toBe('active');
     expect(rolledBack.slots.production.status).toBe('stopped');
     expect(rolledBack.slots.production.stoppedAt).toBeDefined();
+    expect((rolledBack.slots.production.stoppedAt as Date).getTime()).toBeGreaterThanOrEqual(
+      rollbackTime.getTime()
+    );
   });
 
   it('calls onPromoted hook when provided', async () => {
@@ -88,7 +101,7 @@ describe('PromoteEngine', () => {
     };
 
     const engine = new PromoteEngine(store, config);
-    const deployment = await deploymentManager.createDeployment('build-hook');
+    const deployment = await deploymentManager.createDeployment('build-hook', '/tmp/dist');
 
     // Set up running preview
     await store.set(deployment.id, {
@@ -118,7 +131,7 @@ describe('PromoteEngine', () => {
     };
 
     const engine = new PromoteEngine(store, config);
-    const deployment = await deploymentManager.createDeployment('build-cancel-promote');
+    const deployment = await deploymentManager.createDeployment('build-cancel-promote', '/tmp/dist');
 
     // Set up running preview
     await store.set(deployment.id, {
@@ -140,23 +153,24 @@ describe('PromoteEngine', () => {
     let failedError: Error | null = null;
     const config = {
       hooks: {
-        onPromoteFailed: async (context, error) => {
+        onPromoteFailed: async (context: any, error: Error) => {
           failedError = error;
         },
       },
     };
 
-    const failingStore = {
+    const failingStore: any = {
       get: async (id: string) => {
         if (id === 'test-id') {
           return {
             id: 'test-id',
             buildId: 'build-123',
             createdAt: new Date(),
-            status: 'active',
+            status: 'active' as DeploymentStatus,
+            distPath: '/tmp/dist',
             slots: {
-              preview: { status: 'running' },
-              production: { status: 'stopped' },
+              preview: { status: 'running' as ProcessStatus },
+              production: { status: 'stopped' as ProcessStatus },
             },
           };
         }
@@ -172,7 +186,7 @@ describe('PromoteEngine', () => {
     const engine = new PromoteEngine(failingStore, config);
     await expect(engine.promote('test-id')).rejects.toThrow('Store set failed');
     expect(failedError).toBeDefined();
-    expect(failedError?.message).toBe('Store set failed');
+    expect((failedError as unknown as Error).message).toBe('Store set failed');
   });
 
   it('calls onRollback hook when provided', async () => {
@@ -190,7 +204,7 @@ describe('PromoteEngine', () => {
 
     const engine = new PromoteEngine(store, config);
     const deployment =
-      await deploymentManager.createDeployment('build-rollback');
+      await deploymentManager.createDeployment('build-rollback', '/tmp/dist');
 
     // Set up promoted state
     const promoted = {
@@ -218,22 +232,23 @@ describe('PromoteEngine', () => {
     let failedError: Error | null = null;
     const config = {
       hooks: {
-        onRollbackFailed: async (deployment, error) => {
+        onRollbackFailed: async (deployment: any, error: Error) => {
           failedError = error;
         },
       },
     };
 
-    const failingStore = {
+    const failingStore: any = {
       get: async (id: string) => {
         return {
           id,
           buildId: 'build-123',
           createdAt: new Date(),
-          status: 'promoted',
+          status: 'promoted' as DeploymentStatus,
+          distPath: '/tmp/dist',
           slots: {
-            preview: { status: 'running' },
-            production: { status: 'running' },
+            preview: { status: 'running' as ProcessStatus },
+            production: { status: 'running' as ProcessStatus },
           },
         };
       },
@@ -247,6 +262,6 @@ describe('PromoteEngine', () => {
     const engine = new PromoteEngine(failingStore, config);
     await expect(engine.rollback('test-id')).rejects.toThrow('Rollback store set failed');
     expect(failedError).toBeDefined();
-    expect(failedError?.message).toBe('Rollback store set failed');
+    expect((failedError as unknown as Error).message).toBe('Rollback store set failed');
   });
 });
