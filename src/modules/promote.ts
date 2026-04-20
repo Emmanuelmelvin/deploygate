@@ -61,7 +61,11 @@ export class PromoteEngine {
 
     try {
       // Compute all state mutations in memory before persisting
-      deployment.slots.production = { ...previewSlot };
+      deployment.slots.production = {
+        ...previewSlot,
+        status: 'running',
+        startedAt: new Date(),
+      };
       deployment.status = 'promoted';
 
       // Commit all mutations in a single atomic write
@@ -107,8 +111,10 @@ export class PromoteEngine {
       await runHook(this.config?.hooks, 'onRollbackStart', deployment);
 
       // Compute all state mutations in memory before persisting
-      deployment.slots.production.status = 'stopped';
-      deployment.slots.production.stoppedAt = new Date();
+      deployment.slots.production = {
+        status: 'stopped',
+        stoppedAt: new Date(),
+      };
       deployment.status = 'active';
 
       // Commit all mutations in a single atomic write
