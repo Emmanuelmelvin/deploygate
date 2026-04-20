@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-import * as fs from 'fs';
-import * as path from 'path';
 import { Command } from 'commander';
 import {
   createDeployment,
@@ -12,30 +10,10 @@ import {
   promote,
   rollback,
   bindDomain,
-  createEmitter,
 } from 'deploygate';
 import type { DeploygateConfig, Slot } from 'deploygate';
 import { logger } from './logger';
-import { hooks, PlatformEvents } from './hooks';
-import { startServer, stopServer } from './server';
-
-// ============================================================
-// Custom Event Emitter Setup
-// ============================================================
-const emitter = createEmitter<PlatformEvents>();
-
-// Register custom event handlers
-emitter.on('ssl:provisioned', async (domain: string) => {
-  logger.success(`  [custom event] 🔒 SSL certificate provisioned for ${domain}`);
-});
-
-emitter.on('notifications:sent', async (deploymentId: string, event: string) => {
-  logger.info(`  [custom event] 📬 Notification sent: ${event} for ${deploymentId}`);
-});
-
-emitter.on('analytics:tracked', async (deploymentId: string, action: string) => {
-  logger.info(`  [custom event] 📊 Analytics tracked: ${action} (${deploymentId})`);
-});
+import { hooks } from './hooks';
 
 const config: DeploygateConfig = {
   adapter: 'file',
@@ -51,85 +29,39 @@ program
   .description('Deploy preview slot from dist folder')
   .action(async (distPath: string) => {
     logger.step(1, 4, 'Validating build output...');
-
-    if (!fs.existsSync(distPath) || !fs.existsSync(path.join(distPath, 'index.html'))) {
-      logger.error(`Invalid dist path: ${distPath} must exist and contain index.html`);
-      process.exit(1);
-    }
+    const buildId = `build-${Date.now()}`;
 
     logger.step(2, 4, 'Creating deployment...');
-    const buildId = `build-${Date.now()}`;
-    const deployment = await createDeployment(buildId, config, distPath);
+    const deployment = await createDeployment(buildId, distPath, config);
 
-    // Emit custom events
-    await emitter.emit('analytics:tracked', deployment.id, 'deployment_created');
     logger.step(3, 4, 'Starting preview slot...');
-    await startSlot(deployment.id, 'preview', 3000, config);
-
-    logger.step(4, 4, 'Preview server running');
+    await startSlot(deployment.id, 'preview', config);
+    
+    logger.step(4, 4, 'Done');
     logger.blank();
     logger.indent(`Deployment ID : ${deployment.id}`);
-    logger.indent(`Preview URL   : http://localhost:3000`);
     logger.indent(`Promote with  : platform promote ${deployment.id}`);
-    await startServer(3000, distPath);
   });
 
 program
   .command('promote <deploymentId>')
   .description('Promote preview → production')
   .action(async (deploymentId: string) => {
-    const deployment = await getDeployment(deploymentId, config);
-    if (!deployment) {
-      logger.error(`Deployment ${deploymentId} not found`);
-      process.exit(1);
-    }
-
-    const distPath = deployment.distPath;
-    if (!distPath) {
-      logger.error(`Dist path not stored in deployment ${deploymentId}`);
-      process.exit(1);
-    }
-
-    logger.step(1, 4, 'Promoting preview to production...');
+    logger.step(1, 2, 'Promoting preview to production...');
     await promote(deploymentId, config);
 
-    // Emit custom events
-    await emitter.emit('notifications:sent', deploymentId, 'promotion_started');
-    await emitter.emit('analytics:tracked', deploymentId, 'promotion_completed');
-
-    logger.step(2, 4, 'Preparing production slot...');
-    await stopSlot(deploymentId, 'production', config);
-    await startSlot(deploymentId, 'production', 3001, config);
-
-    logger.step(3, 4, 'Starting production server...');
-
-    logger.step(4, 4, 'Production server running');
+    logger.step(2, 2, 'Done');
     logger.blank();
-    logger.indent(`Deployment ID    : ${deploymentId}`);
-    logger.indent(`Production URL   : http://localhost:3001`);
-    logger.indent(`Rollback with    : platform rollback ${deploymentId}`);
-    await startServer(3001, distPath);
+    logger.indent(`Deployment ID : ${deploymentId}`);
   });
 
 program
   .command('rollback <deploymentId>')
   .description('Rollback production to stopped')
   .action(async (deploymentId: string) => {
-    const deployment = await getDeployment(deploymentId, config);
-    if (!deployment) {
-      logger.error(`Deployment ${deploymentId} not found`);
-      process.exit(1);
-    }
-
-    // Emit custom events
-    await emitter.emit('notifications:sent', deploymentId, 'rollback_initiated');
-    await emitter.emit('analytics:tracked', deploymentId, 'rollback_executed');
-
     await rollback(deploymentId, config);
     await stopSlot(deploymentId, 'production', config);
-
     logger.success('Production rolled back');
-    logger.indent(`Preview still available at http://localhost:3000`);
   });
 
 program
@@ -186,11 +118,6 @@ program
     }
 
     await bindDomain(deploymentId, slot as Slot, domain, config);
-
-    // Emit custom events
-    await emitter.emit('ssl:provisioned', domain);
-    await emitter.emit('notifications:sent', deploymentId, `domain_bound_${slot}`);
-    await emitter.emit('analytics:tracked', deploymentId, `domain_binding_${slot}`);
   });
 
 program.parse();

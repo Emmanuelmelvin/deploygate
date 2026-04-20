@@ -99,11 +99,11 @@ async function initializeManagers(config?: DeploygateConfig) {
  * console.log(deployment.distPath); // './dist'
  * ```
  */
-export async function createDeployment(buildId: string, config?: DeploygateConfig, distPath?: string) {
+export async function createDeployment(buildId: string, distPath: string, config?: DeploygateConfig) {
   if (!globalDeploymentManager || config?.store) {
     await initializeManagers(config);
   }
-  return globalDeploymentManager.createDeployment(buildId, config, distPath);
+  return globalDeploymentManager.createDeployment(buildId, distPath, config);
 }
 
 /**

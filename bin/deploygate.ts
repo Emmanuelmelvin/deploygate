@@ -26,10 +26,10 @@ program
 program
   .command('create <buildId>')
   .description('Create a new deployment')
-  .action(async (buildId: string) => {
+  .action(async (buildId: string, distPath: string) => {
     try {
       logger.info(`Creating deployment for build ${buildId}`);
-      const deployment = await createDeployment(buildId);
+      const deployment = await createDeployment(buildId, distPath);
       logger.info(`Successfully created deployment ${deployment.id}`);
       logger.info(JSON.stringify(deployment, null, 2));
     } catch (error) {

@@ -24,12 +24,13 @@ export interface Deployment {
   createdAt: Date;
   status: DeploymentStatus;
   slots: Record<Slot, SlotState>;
-  distPath?: string;
+  distPath: string;
 }
 
 // Context types for hooks
 export interface DeploymentContext {
   buildId: string;
+  distPath: string;
   config?: DeploygateConfig;
 }
 

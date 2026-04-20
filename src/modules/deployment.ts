@@ -11,11 +11,11 @@ export class DeploymentManager {
 
   async createDeployment(
     buildId: string,
+    distPath: string,
     config?: DeploygateConfig,
-    distPath?: string
   ): Promise<Deployment> {
     assertNonEmptyString(buildId, 'buildId');
-    const context: DeploymentContext = { buildId, config };
+    const context: DeploymentContext = { buildId, config, distPath };
 
     // Cancellable before hook
     try {
