@@ -9,9 +9,7 @@ import type {
 } from 'deploygate';
 import { logger } from './logger';
 
-/**
- * Custom events for this platform
- */
+
 export interface PlatformEvents extends EventMap {
   'ssl:provisioned': (domain: string) => Promise<void>;
   'notifications:sent': (deploymentId: string, event: string) => Promise<void>;
@@ -19,9 +17,6 @@ export interface PlatformEvents extends EventMap {
 }
 
 export const hooks: DeploygateHooks = {
-  // ============================================================
-  // DEPLOYMENT LIFECYCLE HOOKS
-  // ============================================================
 
   onBeforeDeploy: async (context: DeploymentContext) => {
     logger.info(`🚀 Preparing deployment for build ${context.buildId}`);

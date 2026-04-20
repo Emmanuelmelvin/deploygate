@@ -63,7 +63,6 @@ program
 
     // Emit custom events
     await emitter.emit('analytics:tracked', deployment.id, 'deployment_created');
-
     logger.step(3, 4, 'Starting preview slot...');
     await startSlot(deployment.id, 'preview', 3000, config);
 
