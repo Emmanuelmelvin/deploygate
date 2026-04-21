@@ -60,7 +60,7 @@ deploygate does not spawn processes, provision servers, manage DNS, handle authe
 ## Documentation
 
 Full documentation, API reference, hook lifecycle, and examples:
-docs [https://EmmanuelMelin.github.io/deploygate]
+(here) [https://EmmanuelMelvin.github.io/deploygate]
 
 ## License
 
