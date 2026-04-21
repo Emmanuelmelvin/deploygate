@@ -1,6 +1,6 @@
 {
   "name": "deploygate-docs",
-  "package": "module",
+  "type": "module",
   "private": true,
   "scripts": {
     "dev": "vitepress dev",
