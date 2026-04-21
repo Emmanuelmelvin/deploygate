@@ -1,0 +1,33 @@
+# Source
+src/
+
+# Tests
+tests/
+
+# Examples
+examples/
+
+# Config files
+tsconfig.json
+tsup.config.ts
+vitest.config.ts
+.eslintrc.json
+.prettierrc
+.eslintignore
+
+# Dev files
+.deploygate-data/
+*.tgz
+*.log
+
+# Environment
+.env
+.env.*
+
+# Editor
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
