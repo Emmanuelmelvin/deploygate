@@ -45,7 +45,7 @@ await bindDomain(deployment.id, 'production', 'yourdomain.com', config)
 
 ## CLI
 
-- `deploygate create <buildId>` # Create a new deployment
+- `deploygate create <buildId> <distPath>` # Create a new deployment
 - `deploygate start <deploymentId> preview` # Start the preview slot
 - `deploygate promote <deploymentId>` # Promote preview to production
 - `deploygate rollback <deploymentId>` # Rollback production slot
