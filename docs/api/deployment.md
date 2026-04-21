@@ -10,7 +10,7 @@ Creates a new deployment and returns the deployment object.
 | distPath    | string              | yes      | Path to static build output       |
 | config      | DeploygateConfig    | no       | Configuration and hooks           |
 
-**Returns:** `Promise<Deployment>`
+**Returns:** `Promise&lt;Deployment&gt;`
 
 **Throws:** Error if buildId already exists or invalid
 
@@ -29,7 +29,7 @@ Fetch a deployment by id.
 | id        | string           | yes      | Deployment id         |
 | config    | DeploygateConfig | no       | Config                |
 
-**Returns:** `Promise<Deployment | null>`
+**Returns:** `Promise&lt;Deployment | null&gt;`
 
 ```ts
 const deployment = await getDeployment('dep-abc', config)
@@ -45,7 +45,7 @@ List all deployments.
 |-----------|------------------|----------|-----------------------|
 | config    | DeploygateConfig | no       | Config                |
 
-**Returns:** `Promise<Deployment[]>`
+**Returns:** `Promise&lt;Deployment[]&gt;`
 
 ```ts
 const deployments = await listDeployments(config)
@@ -60,10 +60,10 @@ Update a deployment with a partial patch.
 | Parameter | Type             | Required | Description           |
 |-----------|------------------|----------|-----------------------|
 | id        | string           | yes      | Deployment id         |
-| patch     | Partial<Deployment> | yes   | Fields to update      |
+| patch     | Partial&lt;Deployment&gt; | yes   | Fields to update      |
 | config    | DeploygateConfig | no       | Config                |
 
-**Returns:** `Promise<Deployment>`
+**Returns:** `Promise&lt;Deployment&gt;`
 
 ```ts
 await updateDeployment('dep-abc', { meta: { foo: 'bar' } }, config)
@@ -80,7 +80,7 @@ Pause a deployment.
 | deploymentId  | string           | yes      | Deployment id         |
 | config        | DeploygateConfig | no       | Config                |
 
-**Returns:** `Promise<void>`
+**Returns:** `Promise&lt;void&gt;`
 
 ```ts
 await pauseDeployment('dep-abc', config)

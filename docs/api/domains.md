@@ -7,11 +7,11 @@ Bind a domain to a slot.
 | Parameter     | Type                | Required | Description           |
 |---------------|---------------------|----------|-----------------------|
 | deploymentId  | string              | yes      | Deployment id         |
-| slot          | 'preview' \| 'production' | yes | Slot                  |
+| slot          | `'preview' \| 'production'` | yes | Slot                  |
 | domain        | string              | yes      | Domain to bind        |
 | config        | DeploygateConfig    | no       | Config                |
 
-**Returns:** `Promise<void>`
+**Returns:** `Promise&lt;void&gt;`
 
 **Domain format validation:**
 - Must match: `/^(?!-)[A-Za-z0-9-]{1,63}(?<!-)\.[A-Za-z]{2,}$/`
@@ -31,10 +31,10 @@ Unbind a domain from a slot.
 | Parameter     | Type                | Required | Description           |
 |---------------|---------------------|----------|-----------------------|
 | deploymentId  | string              | yes      | Deployment id         |
-| slot          | 'preview' \| 'production' | yes | Slot                  |
+| slot          | `'preview' \| 'production'` | yes | Slot                  |
 | config        | DeploygateConfig    | no       | Config                |
 
-**Returns:** `Promise<void>`
+**Returns:** `Promise&lt;void&gt;`
 
 ```ts
 await unbindDomain('dep-abc', 'preview', config)
@@ -49,10 +49,10 @@ Get the domain bound to a slot.
 | Parameter     | Type                | Required | Description           |
 |---------------|---------------------|----------|-----------------------|
 | deploymentId  | string              | yes      | Deployment id         |
-| slot          | 'preview' \| 'production' | yes | Slot                  |
+| slot          | `'preview' \| 'production'` | yes | Slot                  |
 | config        | DeploygateConfig    | no       | Config                |
 
-**Returns:** `Promise<string | null>`
+**Returns:** `Promise&lt;string | null&gt;`
 
 ```ts
 const domain = await getDomain('dep-abc', 'production', config)

@@ -64,9 +64,9 @@ export const hooks = {
 
 1. Build the React app
 2. `platform deploy ./react-app/dist`
-3. Open http://localhost:3000
+3. Open `http://localhost:3000`
 4. `platform promote <deploymentId>`
-5. Open http://localhost:3001
+5. Open `http://localhost:3001`
 6. `platform rollback <deploymentId>`
 
 ## Using deploygate CLI directly

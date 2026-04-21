@@ -31,3 +31,6 @@ vitest.config.ts
 # OS
 .DS_Store
 Thumbs.db
+
+# Documentation
+docs/

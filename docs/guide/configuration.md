@@ -4,7 +4,7 @@ The `DeploygateConfig` interface:
 
 | Field    | Type                        | Default   | Description                                      |
 |----------|-----------------------------|-----------|--------------------------------------------------|
-| adapter  | 'memory' \| 'file'          | 'memory'  | Which built-in adapter to use                     |
+| adapter  | `'memory' \| 'file'`          | 'memory'  | Which built-in adapter to use                     |
 | dataDir  | string                      | undefined | Directory for file adapter data                   |
 | store    | StateStore                  | undefined | Custom state store implementation                 |
 | hooks    | DeploygateHooks             | undefined | Lifecycle hooks for all operations                |

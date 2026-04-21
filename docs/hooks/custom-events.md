@@ -8,16 +8,16 @@ Define a typed `EventMap` interface:
 
 ```ts
 interface MyPlatformEvents {
-  'ssl:provisioned': (deployment: Deployment, domain: string) => Promise<void>
-  'cache:cleared': (deployment: Deployment) => Promise<void>
-  'health:failed': (deployment: Deployment, error: Error) => Promise<void>
+  'ssl:provisioned': (deployment: Deployment, domain: string) =&gt; Promise&lt;void&gt;
+  'cache:cleared': (deployment: Deployment) =&gt; Promise&lt;void&gt;
+  'health:failed': (deployment: Deployment, error: Error) =&gt; Promise&lt;void&gt;
 }
 ```
 
 ## Creating an emitter
 
 ```ts
-const emitter = createEmitter<MyPlatformEvents>()
+const emitter = createEmitter&lt;MyPlatformEvents&gt;()
 ```
 
 ## Registering handlers
@@ -49,12 +49,12 @@ If a handler throws, `emit()` will bubble the error to the caller.
 
 ```ts
 interface MyPlatformEvents {
-  'ssl:provisioned': (deployment: Deployment, domain: string) => Promise<void>
-  'cache:cleared': (deployment: Deployment) => Promise<void>
-  'health:failed': (deployment: Deployment, error: Error) => Promise<void>
+  'ssl:provisioned': (deployment: Deployment, domain: string) =&gt; Promise&lt;void&gt;
+  'cache:cleared': (deployment: Deployment) =&gt; Promise&lt;void&gt;
+  'health:failed': (deployment: Deployment, error: Error) =&gt; Promise&lt;void&gt;
 }
 
-const emitter = createEmitter<MyPlatformEvents>()
+const emitter = createEmitter&lt;MyPlatformEvents&gt;()
 
 emitter.on('ssl:provisioned', async (deployment, domain) => {
   await updateLoadBalancer(domain, deployment.slots.production.port)

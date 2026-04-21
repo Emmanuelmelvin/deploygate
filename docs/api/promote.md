@@ -34,7 +34,7 @@ Rollback production slot to stopped.
 | deploymentId  | string           | yes      | Deployment id         |
 | config        | DeploygateConfig | no       | Config                |
 
-**Returns:** `Promise<void>`
+**Returns:** `Promise&lt;void&gt;`
 
 **State transition:**
 ```

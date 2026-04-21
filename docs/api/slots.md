@@ -13,11 +13,11 @@ Start a slot for a deployment.
 | Parameter      | Type                | Required | Description                       |
 |---------------|---------------------|----------|-----------------------------------|
 | deploymentId  | string              | yes      | Deployment id                     |
-| slot          | 'preview' \| 'production' | yes | Slot to start                     |
-| portOrConfig  | number \| DeploygateConfig | no | Port or config                    |
+| slot          | `'preview' \| 'production'` | yes | Slot to start                     |
+| portOrConfig  | `number \| DeploygateConfig` | no | Port or config                    |
 | maybeConfig   | DeploygateConfig     | no       | Config if port is provided        |
 
-**Returns:** `Promise<void>`
+**Returns:** `Promise&lt;void&gt;`
 
 **State transitions:**
 - startSlot: only allowed from 'stopped' or 'crashed' → 'running'
@@ -36,10 +36,10 @@ Stop a slot for a deployment.
 | Parameter      | Type                | Required | Description                       |
 |---------------|---------------------|----------|-----------------------------------|
 | deploymentId  | string              | yes      | Deployment id                     |
-| slot          | 'preview' \| 'production' | yes | Slot to stop                      |
+| slot          | `'preview' \| 'production'` | yes | Slot to stop                      |
 | config        | DeploygateConfig     | no       | Config                            |
 
-**Returns:** `Promise<void>`
+**Returns:** `Promise&lt;void&gt;`
 
 ```ts
 await stopSlot('dep-abc', 'preview', config)
