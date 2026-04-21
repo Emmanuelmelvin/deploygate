@@ -83,6 +83,5 @@ Pause a deployment.
 **Returns:** `Promise<void>`
 
 ```ts
-
 await pauseDeployment('dep-abc', config)
 ```
