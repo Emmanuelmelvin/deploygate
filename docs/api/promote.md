@@ -12,17 +12,21 @@ Promote the preview slot to production atomically.
 
 **State transition:**
 
+::: raw
 ```
 status: 'running'  → promote() → status: 'promoted'
 ```
+:::
 
 **Atomic operation:**
 
 - `slots.production = { ...slots.preview, status: 'running', startedAt: now }`
 
+::: raw
 ```ts
 await promote('dep-abc');
 ```
+:::
 
 ---
 
@@ -38,14 +42,18 @@ Rollback production slot to stopped.
 
 **State transition:**
 
+::: raw
 ```
 status: 'promoted' → rollback() → status: 'running'
 ```
+:::
 
 **Atomic operation:**
 
 - `slots.production = { status: 'stopped', stoppedAt: now }`
 
+::: raw
 ```ts
 await rollback('dep-abc');
 ```
+:::

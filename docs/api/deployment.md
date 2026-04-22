@@ -15,9 +15,11 @@ Creates a new deployment and returns the deployment object.
 
 > Config is automatically loaded from `deploygate.config.ts`
 
+::: raw
 ```ts
 const deployment = await createDeployment('build-123', './dist');
 ```
+:::
 
 ---
 
@@ -31,9 +33,11 @@ Fetch a deployment by id.
 
 **Returns:** `Promise<Deployment | null>`
 
+::: raw
 ```ts
 const deployment = await getDeployment('dep-abc');
 ```
+:::
 
 ---
 
@@ -43,9 +47,11 @@ List all deployments.
 
 **Returns:** `Promise<Deployment[]>`
 
+::: raw
 ```ts
 const deployments = await listDeployments();
 ```
+:::
 
 ---
 
@@ -60,9 +66,11 @@ Update a deployment with a partial patch.
 
 **Returns:** `Promise<Deployment>`
 
+::: raw
 ```ts
 await updateDeployment('dep-abc', { meta: { foo: 'bar' } });
 ```
+:::
 
 ---
 
@@ -74,8 +82,10 @@ Pause a deployment.
 | ------------ | ------ | -------- | ------------- |
 | deploymentId | string | yes      | Deployment id |
 
-**Returns:** `Promise&lt;void&gt;`
+**Returns:** `Promise<void>`
 
+::: raw
 ```ts
-await pauseDeployment('dep-abc', config);
+await pauseDeployment('dep-abc');
 ```
+:::

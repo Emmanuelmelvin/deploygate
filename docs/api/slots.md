@@ -14,14 +14,18 @@ Start a slot for a deployment.
 
 **State transitions:**
 
+::: raw
 - startSlot: only allowed from 'stopped' or 'crashed' → 'running'
 - stopSlot: only allowed from 'running' or 'starting' → 'stopped'
+:::
 
 > Config is automatically loaded from `deploygate.config.ts`
 
+::: raw
 ```ts
 await startSlot('dep-abc', 'preview', 3000);
 ```
+:::
 
 ---
 
@@ -36,6 +40,8 @@ Stop a slot for a deployment.
 
 **Returns:** `Promise<void>`
 
+::: raw
 ```ts
 await stopSlot('dep-abc', 'preview');
 ```
+:::

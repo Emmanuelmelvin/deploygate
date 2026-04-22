@@ -18,9 +18,11 @@ Bind a domain to a slot.
 
 > deploygate stores the domain string. Your platform is responsible for provisioning DNS, SSL certificates, and reverse proxy configuration.
 
+::: raw
 ```ts
 await bindDomain('dep-abc', 'production', 'example.com');
 ```
+:::
 
 ---
 
@@ -35,9 +37,11 @@ Unbind a domain from a slot.
 
 **Returns:** `Promise<void>`
 
+::: raw
 ```ts
 await unbindDomain('dep-abc', 'preview');
 ```
+:::
 
 ---
 
@@ -52,6 +56,8 @@ Get the domain bound to a slot.
 
 **Returns:** `Promise<string | null>`
 
+::: raw
 ```ts
 const domain = await getDomain('dep-abc', 'production');
 ```
+:::

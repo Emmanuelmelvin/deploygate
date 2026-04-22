@@ -15,6 +15,7 @@ All methods should be atomic from the caller's perspective.
 
 ## Example: custom store
 
+::: raw
 ```ts
 import { defineConfig } from 'deploygate';
 
@@ -33,6 +34,7 @@ export default defineConfig({
   },
 });
 ```
+:::
 
 Then use deploygate normally — the custom store is automatically used:
 

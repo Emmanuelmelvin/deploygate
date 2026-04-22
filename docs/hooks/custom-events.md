@@ -6,6 +6,7 @@ Custom events let your platform extend deploygate's lifecycle with your own even
 
 Define a typed `EventMap` interface:
 
+::: raw
 ```ts
 interface MyPlatformEvents {
   'ssl:provisioned': (deployment: Deployment, domain: string) => Promise<void>;
@@ -13,12 +14,15 @@ interface MyPlatformEvents {
   'health:failed': (deployment: Deployment, error: Error) => Promise<void>;
 }
 ```
+:::
 
 ## Creating an emitter
 
+::: raw
 ```ts
 const emitter = createEmitter<MyPlatformEvents>()
 ```
+:::
 
 ## Registering handlers
 
@@ -47,14 +51,15 @@ If a handler throws, `emit()` will bubble the error to the caller.
 
 ## Real-world example
 
+::: raw
 ```ts
 interface MyPlatformEvents {
-  'ssl:provisioned': (deployment: Deployment, domain: string) =&gt; Promise&lt;void&gt;
-  'cache:cleared': (deployment: Deployment) =&gt; Promise&lt;void&gt;
-  'health:failed': (deployment: Deployment, error: Error) =&gt; Promise&lt;void&gt;
+  'ssl:provisioned': (deployment: Deployment, domain: string) => Promise<void>
+  'cache:cleared': (deployment: Deployment) => Promise<void>
+  'health:failed': (deployment: Deployment, error: Error) => Promise<void>
 }
 
-const emitter = createEmitter&lt;MyPlatformEvents&gt;()
+const emitter = createEmitter<MyPlatformEvents>()
 
 emitter.on('ssl:provisioned', async (deployment, domain) => {
   await updateLoadBalancer(domain, deployment.slots.production.port)
@@ -66,3 +71,4 @@ onDomainBindSuccess: async (ctx) => {
   await emitter.emit('ssl:provisioned', ctx.deployment, ctx.domain)
 }
 ```
+:::
