@@ -1,84 +1,78 @@
 # Deployment API
 
-## createDeployment(buildId, distPath, config?)
+## createDeployment(buildId, distPath)
 
 Creates a new deployment and returns the deployment object.
 
-| Parameter | Type             | Required | Description                 |
-| --------- | ---------------- | -------- | --------------------------- |
-| buildId   | string           | yes      | Unique build identifier     |
-| distPath  | string           | yes      | Path to static build output |
-| config    | DeploygateConfig | no       | Configuration and hooks     |
+| Parameter | Type   | Required | Description                 |
+| --------- | ------ | -------- | --------------------------- |
+| buildId   | string | yes      | Unique build identifier     |
+| distPath  | string | yes      | Path to static build output |
 
-**Returns:** `Promise&lt;Deployment&gt;`
+**Returns:** `Promise<Deployment>`
 
 **Throws:** Error if buildId already exists or invalid
 
+> Config is automatically loaded from `deploygate.config.ts`
+
 ```ts
-const deployment = await createDeployment('build-123', './dist', config);
+const deployment = await createDeployment('build-123', './dist');
 ```
 
 ---
 
-## getDeployment(id, config?)
+## getDeployment(id)
 
 Fetch a deployment by id.
 
-| Parameter | Type             | Required | Description   |
-| --------- | ---------------- | -------- | ------------- |
-| id        | string           | yes      | Deployment id |
-| config    | DeploygateConfig | no       | Config        |
+| Parameter | Type   | Required | Description   |
+| --------- | ------ | -------- | ------------- |
+| id        | string | yes      | Deployment id |
 
-**Returns:** `Promise&lt;Deployment | null&gt;`
+**Returns:** `Promise<Deployment | null>`
 
 ```ts
-const deployment = await getDeployment('dep-abc', config);
+const deployment = await getDeployment('dep-abc');
 ```
 
 ---
 
-## listDeployments(config?)
+## listDeployments()
 
 List all deployments.
 
-| Parameter | Type             | Required | Description |
-| --------- | ---------------- | -------- | ----------- |
-| config    | DeploygateConfig | no       | Config      |
-
-**Returns:** `Promise&lt;Deployment[]&gt;`
+**Returns:** `Promise<Deployment[]>`
 
 ```ts
-const deployments = await listDeployments(config);
+const deployments = await listDeployments();
 ```
 
 ---
 
-## updateDeployment(id, patch, config?)
+## updateDeployment(id, patch)
 
 Update a deployment with a partial patch.
 
 | Parameter | Type                      | Required | Description      |
 | --------- | ------------------------- | -------- | ---------------- |
 | id        | string                    | yes      | Deployment id    |
-| patch     | Partial&lt;Deployment&gt; | yes      | Fields to update |
-| config    | DeploygateConfig          | no       | Config           |
+| patch     | Partial<Deployment>       | yes      | Fields to update |
 
-**Returns:** `Promise&lt;Deployment&gt;`
+**Returns:** `Promise<Deployment>`
 
 ```ts
-await updateDeployment('dep-abc', { meta: { foo: 'bar' } }, config);
+await updateDeployment('dep-abc', { meta: { foo: 'bar' } });
 ```
 
 ---
 
-## pauseDeployment(deploymentId, config?)
+## pauseDeployment(deploymentId)
 
 Pause a deployment.
 
-| Parameter    | Type             | Required | Description   |
-| ------------ | ---------------- | -------- | ------------- |
-| deploymentId | string           | yes      | Deployment id |
-| config       | DeploygateConfig | no       | Config        |
+| Parameter    | Type   | Required | Description   |
+| ------------ | ------ | -------- | ------------- |
+| deploymentId | string | yes      | Deployment id |
 
 **Returns:** `Promise&lt;void&gt;`
 

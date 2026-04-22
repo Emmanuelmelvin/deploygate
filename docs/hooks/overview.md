@@ -2,7 +2,7 @@
 
 Hooks let your platform run custom logic at every stage of the deployment lifecycle. deploygate tracks state and orchestrates the flow, but your hooks do the infrastructure work: provisioning, cleanup, notifications, and more.
 
-Hooks are passed via the `hooks` field in your config object.
+Hooks are passed via the `hooks` field in your `deploygate.config.ts` file.
 
 ## Cancellation contract
 
@@ -10,8 +10,14 @@ Throwing from any before hook aborts the operation. The error propagates to the 
 
 ## Minimal hooks example
 
+In your `deploygate.config.ts`:
+
 ```ts
-const config = {
+import { defineConfig } from 'deploygate';
+
+export default defineConfig({
+  adapter: 'file',
+  dataDir: '.deploygate-data',
   hooks: {
     onBeforeDeploy: async (ctx) => {
       // Check quota, validate build, etc.
@@ -21,5 +27,5 @@ const config = {
       // Notify, update dashboard, etc.
     },
   },
-};
+});
 ```

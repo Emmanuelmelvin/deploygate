@@ -1,37 +1,31 @@
 # Slots API
 
-## startSlot(deploymentId, slot, portOrConfig?, maybeConfig?)
+## startSlot(deploymentId, slot, port?)
 
 Start a slot for a deployment.
 
-**Overloads:**
+| Parameter    | Type                        | Required | Description       |
+| ------------ | --------------------------- | -------- | ----------------- |
+| deploymentId | string                      | yes      | Deployment id     |
+| slot         | `'preview' \| 'production'` | yes      | Slot to start     |
+| port         | number                      | no       | Optional port     |
 
-- `startSlot(id, slot)`
-- `startSlot(id, slot, port)`
-- `startSlot(id, slot, config)`
-- `startSlot(id, slot, port, config)`
-
-| Parameter    | Type                         | Required | Description                |
-| ------------ | ---------------------------- | -------- | -------------------------- |
-| deploymentId | string                       | yes      | Deployment id              |
-| slot         | `'preview' \| 'production'`  | yes      | Slot to start              |
-| portOrConfig | `number \| DeploygateConfig` | no       | Port or config             |
-| maybeConfig  | DeploygateConfig             | no       | Config if port is provided |
-
-**Returns:** `Promise&lt;void&gt;`
+**Returns:** `Promise<void>`
 
 **State transitions:**
 
 - startSlot: only allowed from 'stopped' or 'crashed' → 'running'
 - stopSlot: only allowed from 'running' or 'starting' → 'stopped'
 
+> Config is automatically loaded from `deploygate.config.ts`
+
 ```ts
-await startSlot('dep-abc', 'preview', 3000, config);
+await startSlot('dep-abc', 'preview', 3000);
 ```
 
 ---
 
-## stopSlot(deploymentId, slot, config?)
+## stopSlot(deploymentId, slot)
 
 Stop a slot for a deployment.
 
@@ -39,10 +33,9 @@ Stop a slot for a deployment.
 | ------------ | --------------------------- | -------- | ------------- |
 | deploymentId | string                      | yes      | Deployment id |
 | slot         | `'preview' \| 'production'` | yes      | Slot to stop  |
-| config       | DeploygateConfig            | no       | Config        |
 
-**Returns:** `Promise&lt;void&gt;`
+**Returns:** `Promise<void>`
 
 ```ts
-await stopSlot('dep-abc', 'preview', config);
+await stopSlot('dep-abc', 'preview');
 ```

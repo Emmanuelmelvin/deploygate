@@ -9,6 +9,7 @@ examples/deploygate-example/
   package.json
   README.md
   tsconfig.json
+  deploygate.config.ts
   platform/
     hooks.ts
     index.ts
@@ -25,6 +26,23 @@ examples/deploygate-example/
       index.css
       main.tsx
 ```
+
+## Configuration
+
+The `deploygate.config.ts` file at the root configures deploygate:
+
+```ts
+import { defineConfig } from 'deploygate';
+import { hooks } from './platform/hooks';
+
+export default defineConfig({
+  adapter: 'file',
+  dataDir: '.deploygate-data',
+  hooks,
+});
+```
+
+This config is automatically loaded on first use. No need to pass it to every function call.
 
 ## CLI to library mapping
 

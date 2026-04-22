@@ -1,6 +1,6 @@
 # Domains API
 
-## bindDomain(deploymentId, slot, domain, config?)
+## bindDomain(deploymentId, slot, domain)
 
 Bind a domain to a slot.
 
@@ -9,9 +9,8 @@ Bind a domain to a slot.
 | deploymentId | string                      | yes      | Deployment id  |
 | slot         | `'preview' \| 'production'` | yes      | Slot           |
 | domain       | string                      | yes      | Domain to bind |
-| config       | DeploygateConfig            | no       | Config         |
 
-**Returns:** `Promise&lt;void&gt;`
+**Returns:** `Promise<void>`
 
 **Domain format validation:**
 
@@ -20,12 +19,12 @@ Bind a domain to a slot.
 > deploygate stores the domain string. Your platform is responsible for provisioning DNS, SSL certificates, and reverse proxy configuration.
 
 ```ts
-await bindDomain('dep-abc', 'production', 'example.com', config);
+await bindDomain('dep-abc', 'production', 'example.com');
 ```
 
 ---
 
-## unbindDomain(deploymentId, slot, config?)
+## unbindDomain(deploymentId, slot)
 
 Unbind a domain from a slot.
 
@@ -33,17 +32,16 @@ Unbind a domain from a slot.
 | ------------ | --------------------------- | -------- | ------------- |
 | deploymentId | string                      | yes      | Deployment id |
 | slot         | `'preview' \| 'production'` | yes      | Slot          |
-| config       | DeploygateConfig            | no       | Config        |
 
-**Returns:** `Promise&lt;void&gt;`
+**Returns:** `Promise<void>`
 
 ```ts
-await unbindDomain('dep-abc', 'preview', config);
+await unbindDomain('dep-abc', 'preview');
 ```
 
 ---
 
-## getDomain(deploymentId, slot, config?)
+## getDomain(deploymentId, slot)
 
 Get the domain bound to a slot.
 
@@ -51,10 +49,9 @@ Get the domain bound to a slot.
 | ------------ | --------------------------- | -------- | ------------- |
 | deploymentId | string                      | yes      | Deployment id |
 | slot         | `'preview' \| 'production'` | yes      | Slot          |
-| config       | DeploygateConfig            | no       | Config        |
 
-**Returns:** `Promise&lt;string | null&gt;`
+**Returns:** `Promise<string | null>`
 
 ```ts
-const domain = await getDomain('dep-abc', 'production', config);
+const domain = await getDomain('dep-abc', 'production');
 ```
