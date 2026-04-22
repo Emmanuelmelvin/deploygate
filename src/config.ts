@@ -28,7 +28,6 @@ export async function loadConfig(
     if (filename.endsWith('.json')) {
       try {
         const content = await import(fileUrl, { assert: { type: 'json' } });
-        logger.info(`Loaded config from ${fullPath}`);
         return content.default || content;
       } catch (error) {
         logger.warn(`Failed to load config from ${fullPath}`, error);
