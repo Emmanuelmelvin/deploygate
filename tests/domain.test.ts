@@ -89,7 +89,9 @@ describe('DomainManager', () => {
     };
 
     const manager = new DomainManager(store, config);
-    const deployment = await deploymentManager.createDeployment('build-cancel-domain');
+    const deployment = await deploymentManager.createDeployment(
+      'build-cancel-domain'
+    );
 
     await expect(
       manager.bindDomain(deployment.id, 'preview', 'cancel.example.com')

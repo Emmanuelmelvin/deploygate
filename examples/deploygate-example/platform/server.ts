@@ -17,7 +17,10 @@ const mimeTypes: Record<string, string> = {
   '.ico': 'image/x-icon',
 };
 
-export async function startServer(port: number, distPath: string): Promise<http.Server> {
+export async function startServer(
+  port: number,
+  distPath: string
+): Promise<http.Server> {
   // Stop existing server on this port
   const existing = servers.get(port);
   if (existing) {

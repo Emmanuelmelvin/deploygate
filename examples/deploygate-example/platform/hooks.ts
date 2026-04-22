@@ -1,14 +1,15 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as http from 'http';
-import type {
-  DeploygateHooks,
-  Deployment,
-  DeploymentContext,
-  SlotContext,
-  PromotionContext,
-  DomainContext,
-  EventMap,
+import {
+  type DeploygateHooks,
+  type Deployment,
+  type DeploymentContext,
+  type SlotContext,
+  type PromotionContext,
+  type DomainContext,
+  type EventMap,
+  createEmitter,
 } from 'deploygate';
 import { logger } from './logger';
 import { startServer, stopServer } from './server';
@@ -24,11 +25,27 @@ const portServers = new Map<number, http.Server>();
 // CUSTOM EVENTS
 // ============================================================
 
-export interface PlatformEvents extends EventMap {
-  'ssl:provisioned': (domain: string) => Promise<void>;
-  'notifications:sent': (deploymentId: string, event: string) => Promise<void>;
-  'analytics:tracked': (deploymentId: string, action: string) => Promise<void>;
+ interface PlatformEvents extends EventMap {
+   'ssl:provisioned': (domain: string) => Promise<void>;
+   'notifications:sent': (deploymentId: string, event: string) => Promise<void>;
+   'analytics:tracked': (deploymentId: string, action: string) => Promise<void>;
 }
+
+export const emitter = createEmitter<PlatformEvents>();
+
+emitter.on("notifications:sent", async (deploymentId: string, event: string) => {
+  logger.info(`Notification Sent for deployment(${deploymentId}) and event(${event})`);
+} )
+
+emitter.on("ssl:provisioned", async (domain: string) => {
+  logger.info(`SSL provisioned  for domain ${domain}`);
+} )
+
+emitter.on("analytics:tracked", async (deployment: string, action: string) =>  {
+  logger.info(`Analytics tracked for deployment(${deployment} and the action(${action}) will be taken.)`)
+})
+
+
 
 // ============================================================
 // HOOKS IMPLEMENTATION
@@ -36,7 +53,6 @@ export interface PlatformEvents extends EventMap {
 
 export const hooks: DeploygateHooks = {
   onBeforeDeploy: async (context: DeploymentContext) => {
-
     if (!fs.existsSync(context.distPath)) {
       throw new Error(`Dist path does not exist: ${context.distPath}`);
     }
@@ -54,15 +70,17 @@ export const hooks: DeploygateHooks = {
   },
 
   onDeploySuccess: async (deployment: Deployment) => {
-      // Start preview server
-      try{
-        const server = await startServer(3000, deployment.distPath);
-        portServers.set(3000, server);
-      }catch(error: any){
-        logger.error(`✗ Failed to start preview server on port 3000`);
-        logger.indent(`Error: ${error instanceof Error ? error.message : String(error)}`);
-        return;
-      }
+    // Start preview server
+    try {
+      const server = await startServer(3000, deployment.distPath);
+      portServers.set(3000, server);
+    } catch (error: any) {
+      logger.error(`✗ Failed to start preview server on port 3000`);
+      logger.indent(
+        `Error: ${error instanceof Error ? error.message : String(error)}`
+      );
+      return;
+    }
 
     logger.success(`✓ Deployment ready`);
     logger.indent(`Preview slot: ${deployment.slots.preview.status}`);
@@ -126,7 +144,9 @@ export const hooks: DeploygateHooks = {
   onPromoteSuccess: async (deployment: Deployment) => {
     const distPath = deployment?.distPath;
     if (!distPath) {
-      logger.error(`✗ Cannot start production server: distPath not found for ${deployment.id}`);
+      logger.error(
+        `✗ Cannot start production server: distPath not found for ${deployment.id}`
+      );
       return;
     }
 
@@ -135,7 +155,9 @@ export const hooks: DeploygateHooks = {
       portServers.set(3001, server);
     } catch (error) {
       logger.error(`✗ Failed to start production server on port 3001`);
-      logger.indent(`Error: ${error instanceof Error ? error.message : String(error)}`);
+      logger.indent(
+        `Error: ${error instanceof Error ? error.message : String(error)}`
+      );
       return;
     }
 
@@ -154,7 +176,7 @@ export const hooks: DeploygateHooks = {
     logger.info(`🔄 Starting rollback for ${deployment.id}`);
   },
 
-  onRollbackSuccess: async (deployment: Deployment) => {
+  onRollbackSuccess: async (_deployment: Deployment) => {
     const server = portServers.get(3001);
     if (server) {
       await stopServer(server);
@@ -164,7 +186,7 @@ export const hooks: DeploygateHooks = {
     logger.indent(`Preview still available at http://localhost:3000`);
   },
 
-  onRollbackFailed: async (deployment: Deployment, error: Error) => {
+  onRollbackFailed: async (_deployment: Deployment, error: Error) => {
     logger.error(`✗ Rollback failed`);
     logger.indent(`Error: ${error.message}`);
   },
@@ -179,6 +201,7 @@ export const hooks: DeploygateHooks = {
 
   onDomainBindSuccess: async (context: DomainContext) => {
     const port = context.slot === 'production' ? 3001 : 3000;
+    emitter.emit("ssl:provisioned", context.domain)
     logger.success(`✓ Domain ${context.domain} bound to ${context.slot} slot`);
     logger.indent(
       `In a real platform, update your reverse proxy to point ${context.domain} → localhost:${port}`
@@ -186,6 +209,7 @@ export const hooks: DeploygateHooks = {
   },
 
   onDomainBindFailed: async (context: DomainContext, error: Error) => {
+    emitter.emit("analytics:tracked", context.deployment.id, "Cancel plan")
     logger.error(`✗ Failed to bind domain ${context.domain}`);
     logger.indent(`Error: ${error.message}`);
   },
@@ -194,4 +218,3 @@ export const hooks: DeploygateHooks = {
     logger.info(`🔓 Domain ${context.domain} unbound from ${context.slot}`);
   },
 };
-

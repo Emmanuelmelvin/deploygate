@@ -15,11 +15,11 @@ const config = {
   hooks: {
     onBeforeDeploy: async (ctx) => {
       // Check quota, validate build, etc.
-      if (!ctx.buildId) throw new Error('Missing buildId')
+      if (!ctx.buildId) throw new Error('Missing buildId');
     },
     onDeploySuccess: async (ctx) => {
       // Notify, update dashboard, etc.
-    }
-  }
-}
+    },
+  },
+};
 ```

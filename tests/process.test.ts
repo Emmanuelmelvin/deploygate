@@ -15,7 +15,10 @@ describe('ProcessManager', () => {
   });
 
   it('startSlot sets status to running and assigns port', async () => {
-    const deployment = await deploymentManager.createDeployment('build-123', '/tmp/dist');
+    const deployment = await deploymentManager.createDeployment(
+      'build-123',
+      '/tmp/dist'
+    );
 
     await processManager.startSlot(deployment.id, 'preview', 3000);
 
@@ -26,7 +29,10 @@ describe('ProcessManager', () => {
   });
 
   it('startSlot assigns correct port for production slot', async () => {
-    const deployment = await deploymentManager.createDeployment('build-456', '/tmp/dist');
+    const deployment = await deploymentManager.createDeployment(
+      'build-456',
+      '/tmp/dist'
+    );
 
     await processManager.startSlot(deployment.id, 'production', 3001);
 
@@ -36,7 +42,10 @@ describe('ProcessManager', () => {
   });
 
   it('stopSlot sets status to stopped', async () => {
-    const deployment = await deploymentManager.createDeployment('build-789', '/tmp/dist');
+    const deployment = await deploymentManager.createDeployment(
+      'build-789',
+      '/tmp/dist'
+    );
 
     await processManager.startSlot(deployment.id, 'preview');
     await processManager.stopSlot(deployment.id, 'preview');
@@ -47,7 +56,10 @@ describe('ProcessManager', () => {
   });
 
   it('getSlotStatus returns the current slot state', async () => {
-    const deployment = await deploymentManager.createDeployment('build-status', '/tmp/dist');
+    const deployment = await deploymentManager.createDeployment(
+      'build-status',
+      '/tmp/dist'
+    );
 
     await processManager.startSlot(deployment.id, 'preview', 3000);
     const status = await processManager.getSlotStatus(deployment.id, 'preview');
@@ -57,7 +69,10 @@ describe('ProcessManager', () => {
   });
 
   it('getLogs returns mock log lines', async () => {
-    const deployment = await deploymentManager.createDeployment('build-logs', '/tmp/dist');
+    const deployment = await deploymentManager.createDeployment(
+      'build-logs',
+      '/tmp/dist'
+    );
 
     const logs = await processManager.getLogs(deployment.id, 'preview');
 

@@ -4,18 +4,18 @@
 
 Creates a new deployment and returns the deployment object.
 
-| Parameter   | Type                | Required | Description                       |
-|-------------|---------------------|----------|-----------------------------------|
-| buildId     | string              | yes      | Unique build identifier           |
-| distPath    | string              | yes      | Path to static build output       |
-| config      | DeploygateConfig    | no       | Configuration and hooks           |
+| Parameter | Type             | Required | Description                 |
+| --------- | ---------------- | -------- | --------------------------- |
+| buildId   | string           | yes      | Unique build identifier     |
+| distPath  | string           | yes      | Path to static build output |
+| config    | DeploygateConfig | no       | Configuration and hooks     |
 
 **Returns:** `Promise&lt;Deployment&gt;`
 
 **Throws:** Error if buildId already exists or invalid
 
 ```ts
-const deployment = await createDeployment('build-123', './dist', config)
+const deployment = await createDeployment('build-123', './dist', config);
 ```
 
 ---
@@ -24,15 +24,15 @@ const deployment = await createDeployment('build-123', './dist', config)
 
 Fetch a deployment by id.
 
-| Parameter | Type             | Required | Description           |
-|-----------|------------------|----------|-----------------------|
-| id        | string           | yes      | Deployment id         |
-| config    | DeploygateConfig | no       | Config                |
+| Parameter | Type             | Required | Description   |
+| --------- | ---------------- | -------- | ------------- |
+| id        | string           | yes      | Deployment id |
+| config    | DeploygateConfig | no       | Config        |
 
 **Returns:** `Promise&lt;Deployment | null&gt;`
 
 ```ts
-const deployment = await getDeployment('dep-abc', config)
+const deployment = await getDeployment('dep-abc', config);
 ```
 
 ---
@@ -41,14 +41,14 @@ const deployment = await getDeployment('dep-abc', config)
 
 List all deployments.
 
-| Parameter | Type             | Required | Description           |
-|-----------|------------------|----------|-----------------------|
-| config    | DeploygateConfig | no       | Config                |
+| Parameter | Type             | Required | Description |
+| --------- | ---------------- | -------- | ----------- |
+| config    | DeploygateConfig | no       | Config      |
 
 **Returns:** `Promise&lt;Deployment[]&gt;`
 
 ```ts
-const deployments = await listDeployments(config)
+const deployments = await listDeployments(config);
 ```
 
 ---
@@ -57,16 +57,16 @@ const deployments = await listDeployments(config)
 
 Update a deployment with a partial patch.
 
-| Parameter | Type             | Required | Description           |
-|-----------|------------------|----------|-----------------------|
-| id        | string           | yes      | Deployment id         |
-| patch     | Partial&lt;Deployment&gt; | yes   | Fields to update      |
-| config    | DeploygateConfig | no       | Config                |
+| Parameter | Type                      | Required | Description      |
+| --------- | ------------------------- | -------- | ---------------- |
+| id        | string                    | yes      | Deployment id    |
+| patch     | Partial&lt;Deployment&gt; | yes      | Fields to update |
+| config    | DeploygateConfig          | no       | Config           |
 
 **Returns:** `Promise&lt;Deployment&gt;`
 
 ```ts
-await updateDeployment('dep-abc', { meta: { foo: 'bar' } }, config)
+await updateDeployment('dep-abc', { meta: { foo: 'bar' } }, config);
 ```
 
 ---
@@ -75,13 +75,13 @@ await updateDeployment('dep-abc', { meta: { foo: 'bar' } }, config)
 
 Pause a deployment.
 
-| Parameter     | Type             | Required | Description           |
-|---------------|------------------|----------|-----------------------|
-| deploymentId  | string           | yes      | Deployment id         |
-| config        | DeploygateConfig | no       | Config                |
+| Parameter    | Type             | Required | Description   |
+| ------------ | ---------------- | -------- | ------------- |
+| deploymentId | string           | yes      | Deployment id |
+| config       | DeploygateConfig | no       | Config        |
 
 **Returns:** `Promise&lt;void&gt;`
 
 ```ts
-await pauseDeployment('dep-abc', config)
+await pauseDeployment('dep-abc', config);
 ```

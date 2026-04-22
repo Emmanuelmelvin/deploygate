@@ -92,32 +92,34 @@ program
   .command('start <deploymentId> <slot>')
   .description('Start a slot (preview or production)')
   .option('--port <number>', 'Optional port number to store in slot state')
-  .action(async (deploymentId: string, slot: string, options: { port?: string }) => {
-    try {
-      if (slot !== 'preview' && slot !== 'production') {
-        logger.error('Slot must be either "preview" or "production"');
+  .action(
+    async (deploymentId: string, slot: string, options: { port?: string }) => {
+      try {
+        if (slot !== 'preview' && slot !== 'production') {
+          logger.error('Slot must be either "preview" or "production"');
+          process.exit(1);
+        }
+        const port = options.port ? parseInt(options.port, 10) : undefined;
+        if (options.port && isNaN(port!)) {
+          logger.error('Port must be a valid number');
+          process.exit(1);
+        }
+        logger.info(`Starting ${slot} slot for deployment ${deploymentId}`);
+        await startSlot(deploymentId, slot as 'preview' | 'production', port);
+        const deployment = await getDeployment(deploymentId);
+        logger.info(JSON.stringify(deployment, null, 2));
+      } catch (error) {
+        if (error instanceof DeploygateError) {
+          logger.error(`Error [${error.code}]: ${error.message}`);
+        } else {
+          logger.error(
+            `Error: ${error instanceof Error ? error.message : String(error)}`
+          );
+        }
         process.exit(1);
       }
-      const port = options.port ? parseInt(options.port, 10) : undefined;
-      if (options.port && isNaN(port!)) {
-        logger.error('Port must be a valid number');
-        process.exit(1);
-      }
-      logger.info(`Starting ${slot} slot for deployment ${deploymentId}`);
-      await startSlot(deploymentId, slot as 'preview' | 'production', port);
-      const deployment = await getDeployment(deploymentId);
-      logger.info(JSON.stringify(deployment, null, 2));
-    } catch (error) {
-      if (error instanceof DeploygateError) {
-        logger.error(`Error [${error.code}]: ${error.message}`);
-      } else {
-        logger.error(
-          `Error: ${error instanceof Error ? error.message : String(error)}`
-        );
-      }
-      process.exit(1);
     }
-  });
+  );
 
 program
   .command('stop <deploymentId> <slot>')

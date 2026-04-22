@@ -97,7 +97,11 @@ describe('DeploymentManager', () => {
       },
     };
 
-    const deployment = await manager.createDeployment('build-success', 'tmp/dist', config);
+    const deployment = await manager.createDeployment(
+      'build-success',
+      'tmp/dist',
+      config
+    );
     expect(deployment.status).toBe('active');
     expect(hookCalls).toEqual(['start', 'success']);
   });
@@ -106,7 +110,7 @@ describe('DeploymentManager', () => {
     let failedError: Error | null = null;
     const config = {
       hooks: {
-        onDeployFailed: async ( error: any) => {
+        onDeployFailed: async (error: any) => {
           failedError = error;
         },
       },
@@ -124,7 +128,7 @@ describe('DeploymentManager', () => {
 
     const failingManager = new DeploymentManager(failingStore);
     await expect(
-      failingManager.createDeployment('build-failed', 'tmp/dist',  config)
+      failingManager.createDeployment('build-failed', 'tmp/dist', config)
     ).rejects.toThrow('Store operation failed');
 
     expect(failedError).toBeDefined();
@@ -140,7 +144,11 @@ describe('DeploymentManager', () => {
       },
     };
 
-    const created = await manager.createDeployment('build-pause', 'tmp/dist', config);
+    const created = await manager.createDeployment(
+      'build-pause',
+      'tmp/dist',
+      config
+    );
     const paused = await manager.pauseDeployment(created.id, config);
 
     expect(paused.status).toBe('paused');

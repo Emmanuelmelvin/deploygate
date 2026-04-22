@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitepress'
+import { defineConfig } from 'vitepress';
 
 export default defineConfig({
   title: 'deploygate',
@@ -10,7 +10,7 @@ export default defineConfig({
       { text: 'API', link: '/api/deployment' },
       { text: 'Hooks', link: '/hooks/overview' },
       { text: 'Example', link: '/example/platform-integration' },
-      { text: 'npm', link: 'https://npmjs.com/package/deploygate' }
+      { text: 'npm', link: 'https://npmjs.com/package/deploygate' },
     ],
     sidebar: {
       '/guide/': [
@@ -20,9 +20,9 @@ export default defineConfig({
             { text: 'Introduction', link: '/guide/introduction' },
             { text: 'Getting started', link: '/guide/getting-started' },
             { text: 'Configuration', link: '/guide/configuration' },
-            { text: 'State store', link: '/guide/state-store' }
-          ]
-        }
+            { text: 'State store', link: '/guide/state-store' },
+          ],
+        },
       ],
       '/api/': [
         {
@@ -31,9 +31,9 @@ export default defineConfig({
             { text: 'Deployment', link: '/api/deployment' },
             { text: 'Slots', link: '/api/slots' },
             { text: 'Promote & rollback', link: '/api/promote' },
-            { text: 'Domains', link: '/api/domains' }
-          ]
-        }
+            { text: 'Domains', link: '/api/domains' },
+          ],
+        },
       ],
       '/hooks/': [
         {
@@ -41,24 +41,27 @@ export default defineConfig({
           items: [
             { text: 'Overview', link: '/hooks/overview' },
             { text: 'Lifecycle reference', link: '/hooks/lifecycle' },
-            { text: 'Custom events', link: '/hooks/custom-events' }
-          ]
-        }
+            { text: 'Custom events', link: '/hooks/custom-events' },
+          ],
+        },
       ],
       '/example/': [
         {
           text: 'Example',
           items: [
-            { text: 'Platform integration', link: '/example/platform-integration' }
-          ]
-        }
-      ]
+            {
+              text: 'Platform integration',
+              link: '/example/platform-integration',
+            },
+          ],
+        },
+      ],
     },
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/Emmanuelmelvin/deploygate' }
+      { icon: 'github', link: 'https://github.com/Emmanuelmelvin/deploygate' },
     ],
     footer: {
-      message: 'Released under the MIT License.'
-    }
-  }
-})
+      message: 'Released under the MIT License.',
+    },
+  },
+});

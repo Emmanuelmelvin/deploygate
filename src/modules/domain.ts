@@ -2,7 +2,11 @@ import type { Slot, DeploygateConfig, DomainContext } from '../types';
 import type { StateStore } from '../store/index';
 import { DeploygateError } from '../errors';
 import logger from '../logger';
-import { assertNonEmptyString, assertValidSlot, assertValidDomain } from '../utils/validate';
+import {
+  assertNonEmptyString,
+  assertValidSlot,
+  assertValidDomain,
+} from '../utils/validate';
 import { runHook } from '../hooks';
 
 export class DomainManager {
@@ -51,7 +55,12 @@ export class DomainManager {
 
       await runHook(this.config?.hooks, 'onDomainBindSuccess', context);
     } catch (error) {
-      await runHook(this.config?.hooks, 'onDomainBindFailed', context, error as Error);
+      await runHook(
+        this.config?.hooks,
+        'onDomainBindFailed',
+        context,
+        error as Error
+      );
       throw error;
     }
   }

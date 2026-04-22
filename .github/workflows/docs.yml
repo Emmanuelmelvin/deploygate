@@ -26,7 +26,7 @@ jobs:
       - name: Build VitePress site
         run: npm run build
         env:
-          DEBUG: "vite:*,vitepress:*"
+          DEBUG: 'vite:*,vitepress:*'
         working-directory: docs
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

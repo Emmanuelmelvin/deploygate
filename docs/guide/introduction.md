@@ -13,6 +13,7 @@ build → preview slot (auto-updated)
 deploygate intentionally does not provision servers, manage DNS, or handle authentication. This separation of concerns lets you keep full control over your infrastructure, while deploygate ensures state is tracked and hooks are fired at the right moments.
 
 **Who is deploygate for?**
+
 - Hosting platforms
 - PaaS builders
 - Internal deployment tooling teams

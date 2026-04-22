@@ -1,5 +1,10 @@
 import { v4 as uuidv4 } from 'uuid';
-import type { Deployment, DeploygateConfig, ProcessStatus, DeploymentContext } from '../types';
+import type {
+  Deployment,
+  DeploygateConfig,
+  ProcessStatus,
+  DeploymentContext,
+} from '../types';
 import type { StateStore } from '../store/index';
 import { DeploygateError } from '../errors';
 import logger from '../logger';
@@ -12,7 +17,7 @@ export class DeploymentManager {
   async createDeployment(
     buildId: string,
     distPath: string,
-    config?: DeploygateConfig,
+    config: DeploygateConfig
   ): Promise<Deployment> {
     assertNonEmptyString(buildId, 'buildId');
     const context: DeploymentContext = { buildId, config, distPath };
@@ -44,10 +49,10 @@ export class DeploymentManager {
     try {
       await this.store.set(deployment.id, deployment);
       await runHook(config?.hooks, 'onDeployStart', deployment);
-      
+
       deployment.status = 'active';
       await this.store.set(deployment.id, deployment);
-      
+
       await runHook(config?.hooks, 'onDeploySuccess', deployment);
     } catch (error) {
       if (deployment.id) {
@@ -68,7 +73,10 @@ export class DeploymentManager {
     return deployment;
   }
 
-  async pauseDeployment(id: string, config?: DeploygateConfig): Promise<Deployment> {
+  async pauseDeployment(
+    id: string,
+    config?: DeploygateConfig
+  ): Promise<Deployment> {
     assertNonEmptyString(id, 'deploymentId');
     const deployment = await this.store.get(id);
     if (!deployment) {

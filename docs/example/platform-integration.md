@@ -50,8 +50,8 @@ export const hooks = {
   },
   onDomainBindSuccess: async (ctx) => {
     // Provision SSL, update DNS
-  }
-}
+  },
+};
 ```
 
 ## Separation of concerns

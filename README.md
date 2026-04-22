@@ -13,12 +13,7 @@ npm install deploygate
 deploygate uses a two-slot model: every deployment has a preview and production slot. Promotion is atomic — preview promotes to production in a single store write. All infrastructure work is handled by your hooks.
 
 ```ts
-import {
-  createDeployment,
-  startSlot,
-  promote,
-  bindDomain
-} from 'deploygate'
+import { createDeployment, startSlot, promote, bindDomain } from 'deploygate';
 
 const config = {
   hooks: {
@@ -33,14 +28,14 @@ const config = {
     },
     onDomainBindSuccess: async (ctx) => {
       // Provision SSL, update DNS
-    }
-  }
-}
+    },
+  },
+};
 
-const deployment = await createDeployment('build-123', './dist', config)
-await startSlot(deployment.id, 'preview', config)
-await promote(deployment.id, config)
-await bindDomain(deployment.id, 'production', 'yourdomain.com', config)
+const deployment = await createDeployment('build-123', './dist', config);
+await startSlot(deployment.id, 'preview', config);
+await promote(deployment.id, config);
+await bindDomain(deployment.id, 'production', 'yourdomain.com', config);
 ```
 
 ## CLI

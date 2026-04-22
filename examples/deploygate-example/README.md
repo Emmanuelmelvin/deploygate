@@ -32,6 +32,7 @@ npm run platform deploy react-app/dist
 ```
 
 Expected output:
+
 ```
 [1/4] Validating build output...
 [2/4] Creating deployment...
@@ -55,6 +56,7 @@ npm run platform promote <deploymentId>
 ```
 
 Expected output:
+
 ```
 [1/3] Promoting preview to production...
 [ok] Preview promoted to production for deployment <id>
@@ -100,6 +102,7 @@ npm run platform rollback <deploymentId>
 ```
 
 Expected output:
+
 ```
 [ok] Deployment <id> rolled back
   Preview slot: running

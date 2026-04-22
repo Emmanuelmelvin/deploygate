@@ -9,7 +9,9 @@ export function assertNonEmptyString(
   fieldName: string
 ): asserts value is string {
   if (typeof value !== 'string') {
-    throw new Error(`${fieldName} must be a non-empty string, got: ${typeof value}`);
+    throw new Error(
+      `${fieldName} must be a non-empty string, got: ${typeof value}`
+    );
   }
   if (value.trim().length === 0) {
     throw new Error(`${fieldName} must be a non-empty string`);

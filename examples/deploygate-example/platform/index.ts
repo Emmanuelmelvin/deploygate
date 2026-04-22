@@ -11,32 +11,29 @@ import {
   rollback,
   bindDomain,
 } from 'deploygate';
-import type { DeploygateConfig, Slot } from 'deploygate';
+import type { Slot } from 'deploygate';
 import { logger } from './logger';
-import { hooks } from './hooks';
 
-const config: DeploygateConfig = {
-  adapter: 'file',
-  dataDir: '.deploygate-data',
-  hooks,
-};
 
 const program = new Command();
-program.name('platform').description('Minimal hosting platform using deploygate').version('1.0.0');
+program
+  .name('platform')
+  .description('Minimal hosting platform using deploygate')
+  .version('1.0.0');
 
 program
-  .command('deploy <distPath>')
+  .command('deploy <distPath> <port>')
   .description('Deploy preview slot from dist folder')
-  .action(async (distPath: string) => {
+  .action(async (distPath: string, port: number) => {
     logger.step(1, 4, 'Validating build output...');
     const buildId = `build-${Date.now()}`;
 
     logger.step(2, 4, 'Creating deployment...');
-    const deployment = await createDeployment(buildId, distPath, config);
+    const deployment = await createDeployment(buildId, distPath);
 
     logger.step(3, 4, 'Starting preview slot...');
-    await startSlot(deployment.id, 'preview', config);
-    
+    await startSlot(deployment.id, 'preview', port);
+
     logger.step(4, 4, 'Done');
     logger.blank();
     logger.indent(`Deployment ID : ${deployment.id}`);
@@ -48,7 +45,7 @@ program
   .description('Promote preview → production')
   .action(async (deploymentId: string) => {
     logger.step(1, 2, 'Promoting preview to production...');
-    await promote(deploymentId, config);
+    await promote(deploymentId);
 
     logger.step(2, 2, 'Done');
     logger.blank();
@@ -59,8 +56,8 @@ program
   .command('rollback <deploymentId>')
   .description('Rollback production to stopped')
   .action(async (deploymentId: string) => {
-    await rollback(deploymentId, config);
-    await stopSlot(deploymentId, 'production', config);
+    await rollback(deploymentId);
+    await stopSlot(deploymentId, 'production');
     logger.success('Production rolled back');
   });
 
@@ -68,7 +65,7 @@ program
   .command('status <deploymentId>')
   .description('Show deployment status')
   .action(async (deploymentId: string) => {
-    const deployment = await getDeployment(deploymentId, config);
+    const deployment = await getDeployment(deploymentId);
     if (!deployment) {
       logger.error(`Deployment ${deploymentId} not found`);
       process.exit(1);
@@ -80,7 +77,7 @@ program
   .command('list')
   .description('List all deployments')
   .action(async () => {
-    const deployments = await listDeployments(config);
+    const deployments = await listDeployments();
     if (deployments.length === 0) {
       logger.info('No deployments found');
       return;
@@ -117,7 +114,7 @@ program
       process.exit(1);
     }
 
-    await bindDomain(deploymentId, slot as Slot, domain, config);
+    await bindDomain(deploymentId, slot as Slot, domain);
   });
 
 program.parse();

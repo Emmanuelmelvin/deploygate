@@ -74,7 +74,12 @@ export class PromoteEngine {
       logger.info(`Deployment ${deploymentId} promoted to production`);
       await runHook(this.config?.hooks, 'onPromoteSuccess', deployment);
     } catch (error) {
-      await runHook(this.config?.hooks, 'onPromoteFailed', context, error as Error);
+      await runHook(
+        this.config?.hooks,
+        'onPromoteFailed',
+        context,
+        error as Error
+      );
       throw error;
     }
 
@@ -123,7 +128,12 @@ export class PromoteEngine {
       logger.info(`Deployment ${deploymentId} rolled back from production`);
       await runHook(this.config?.hooks, 'onRollbackSuccess', deployment);
     } catch (error) {
-      await runHook(this.config?.hooks, 'onRollbackFailed', deployment, error as Error);
+      await runHook(
+        this.config?.hooks,
+        'onRollbackFailed',
+        deployment,
+        error as Error
+      );
       throw error;
     }
 

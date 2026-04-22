@@ -83,10 +83,7 @@ export interface DomainHooks {
 }
 
 export interface DeploygateHooks
-  extends DeploymentHooks,
-    SlotHooks,
-    PromotionHooks,
-    DomainHooks {}
+  extends DeploymentHooks, SlotHooks, PromotionHooks, DomainHooks {}
 
 export type EventMap = {
   [eventName: string]: (...args: any[]) => Promise<void>;

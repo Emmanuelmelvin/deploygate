@@ -1,5 +1,6 @@
 import { existsSync } from 'fs';
 import { join } from 'path';
+import { pathToFileURL } from 'url';  // ← add this
 import type { DeploygateConfig } from './types.js';
 import logger from './logger.js';
 
@@ -11,7 +12,7 @@ const CONFIG_FILENAMES = [
 
 export async function loadConfig(
   configPath?: string
-): Promise<DeploygateConfig> {
+): Promise<DeploygateConfig | null> {
   const searchDir = configPath || process.cwd();
 
   for (const filename of CONFIG_FILENAMES) {
@@ -21,9 +22,12 @@ export async function loadConfig(
       continue;
     }
 
+    // ← convert to file:// URL before importing
+    const fileUrl = pathToFileURL(fullPath).href;
+
     if (filename.endsWith('.json')) {
       try {
-        const content = await import(fullPath, { assert: { type: 'json' } });
+        const content = await import(fileUrl, { assert: { type: 'json' } });
         logger.info(`Loaded config from ${fullPath}`);
         return content.default || content;
       } catch (error) {
@@ -34,7 +38,7 @@ export async function loadConfig(
 
     if (filename.endsWith('.ts') || filename.endsWith('.js')) {
       try {
-        const module = await import(fullPath);
+        const module = await import(fileUrl);  // ← use fileUrl here too
         logger.info(`Loaded config from ${fullPath}`);
         return module.default || module;
       } catch (error) {
@@ -44,6 +48,6 @@ export async function loadConfig(
     }
   }
 
-  logger.debug('No config file found, using empty config');
-  return {};
+  logger.error('No config file found, using empty config');
+  return null;
 }

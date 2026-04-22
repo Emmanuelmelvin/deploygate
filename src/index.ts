@@ -48,6 +48,7 @@ import { PromoteEngine } from './modules/promote';
 import { DomainManager } from './modules/domain';
 import { loadConfig } from './config';
 import type { DeploygateConfig, Deployment, Slot, StateStore } from './types';
+import { DeploygateError } from './errors';
 
 let globalConfig: DeploygateConfig = {};
 let globalDeploymentManager: DeploymentManager;
@@ -55,19 +56,27 @@ let globalProcessManager: ProcessManager;
 let globalPromoteEngine: PromoteEngine;
 let globalDomainManager: DomainManager;
 
-async function initializeManagers(config?: DeploygateConfig) {
-  const finalConfig = config || (await loadConfig());
-  globalConfig = finalConfig;
+async function initializeManagers() {
+  const globalConfig = (await loadConfig());
+
+  if(!globalConfig){
+        throw new DeploygateError(
+      "Deploygate configuration file cannot be found",
+      'CONFIG_FILE_NOT_FOUND',
+      404,
+      {}
+    )
+  }
 
   // Use custom store if provided, otherwise create one based on adapter
   let store: StateStore;
 
-  if (finalConfig.store) {
-    store = finalConfig.store;
+  if (globalConfig.store) {
+    store = globalConfig.store;
   } else {
-    const adapter = finalConfig.adapter || 'memory';
+    const adapter = globalConfig.adapter || 'memory';
     if (adapter === 'file') {
-      store = new FileStore(finalConfig.dataDir);
+      store = new FileStore(globalConfig.dataDir);
     } else {
       store = new MemoryStore();
     }
@@ -75,8 +84,12 @@ async function initializeManagers(config?: DeploygateConfig) {
 
   globalDeploymentManager = new DeploymentManager(store);
   globalProcessManager = new ProcessManager(store);
-  globalPromoteEngine = new PromoteEngine(store, finalConfig);
-  globalDomainManager = new DomainManager(store, finalConfig);
+  globalPromoteEngine = new PromoteEngine(store, globalConfig);
+  globalDomainManager = new DomainManager(store, globalConfig);
+}
+
+export function defineConfig(config: DeploygateConfig): DeploygateConfig{
+  return config;
 }
 
 /**
@@ -99,11 +112,23 @@ async function initializeManagers(config?: DeploygateConfig) {
  * console.log(deployment.distPath); // './dist'
  * ```
  */
-export async function createDeployment(buildId: string, distPath: string, config?: DeploygateConfig) {
-  if (!globalDeploymentManager || config?.store) {
-    await initializeManagers(config);
+async function checkForConfig(){
+  if(!globalDeploymentManager  
+    || !globalConfig  
+    || !globalDomainManager 
+    || !globalProcessManager 
+    || !globalPromoteEngine
+  ){
+    await initializeManagers();
   }
-  return globalDeploymentManager.createDeployment(buildId, distPath, config);
+}
+
+export async function createDeployment(
+  buildId: string,
+  distPath: string,
+) {
+  await checkForConfig();
+  return globalDeploymentManager.createDeployment(buildId, distPath, globalConfig);
 }
 
 /**
@@ -122,10 +147,8 @@ export async function createDeployment(buildId: string, distPath: string, config
  * }
  * ```
  */
-export async function getDeployment(id: string, config?: DeploygateConfig) {
-  if (!globalDeploymentManager || config?.store) {
-    await initializeManagers(config);
-  }
+export async function getDeployment(id: string) {
+  await checkForConfig();
   return globalDeploymentManager.getDeployment(id);
 }
 
@@ -146,12 +169,9 @@ export async function getDeployment(id: string, config?: DeploygateConfig) {
  */
 export async function updateDeployment(
   id: string,
-  patch: Partial<Deployment>,
-  config?: DeploygateConfig
+  patch: Partial<Deployment>
 ) {
-  if (!globalDeploymentManager || config?.store) {
-    await initializeManagers(config);
-  }
+  await checkForConfig();
   return globalDeploymentManager.updateDeployment(id, patch);
 }
 
@@ -167,10 +187,8 @@ export async function updateDeployment(
  * console.log(`Total deployments: ${deployments.length}`);
  * ```
  */
-export async function listDeployments(config?: DeploygateConfig) {
-  if (!globalDeploymentManager || config?.store) {
-    await initializeManagers(config);
-  }
+export async function listDeployments() {
+  await checkForConfig();
   return globalDeploymentManager.listDeployments();
 }
 
@@ -190,11 +208,11 @@ export async function listDeployments(config?: DeploygateConfig) {
  * console.log(paused.status); // 'paused'
  * ```
  */
-export async function pauseDeployment(deploymentId: string, config?: DeploygateConfig) {
-  if (!globalDeploymentManager || config?.store) {
-    await initializeManagers(config);
-  }
-  return globalDeploymentManager.pauseDeployment(deploymentId, config);
+export async function pauseDeployment(
+  deploymentId: string,
+) {
+  await checkForConfig();
+  return globalDeploymentManager.pauseDeployment(deploymentId, globalConfig);
 }
 
 /**
@@ -225,24 +243,10 @@ export async function pauseDeployment(deploymentId: string, config?: DeploygateC
 export async function startSlot(
   deploymentId: string,
   slot: Slot,
-  portOrConfig?: number | DeploygateConfig,
-  maybeConfig?: DeploygateConfig
+  port?: number
 ) {
-  // Parse arguments: port can be number or config, maybeConfig is config if port was provided
-  let port: number | undefined;
-  let config: DeploygateConfig | undefined;
-
-  if (typeof portOrConfig === 'number') {
-    port = portOrConfig;
-    config = maybeConfig;
-  } else if (portOrConfig && typeof portOrConfig === 'object') {
-    config = portOrConfig;
-  }
-
-  if (!globalProcessManager || config?.store) {
-    await initializeManagers(config);
-  }
-  return globalProcessManager.startSlot(deploymentId, slot, port, config);
+  await checkForConfig();
+  return globalProcessManager.startSlot(deploymentId, slot, port, globalConfig);
 }
 
 /**
@@ -261,11 +265,13 @@ export async function startSlot(
  * await stopSlot(deployment.id, 'preview');
  * ```
  */
-export async function stopSlot(deploymentId: string, slot: Slot, config?: DeploygateConfig) {
-  if (!globalProcessManager || config?.store) {
-    await initializeManagers(config);
-  }
-  return globalProcessManager.stopSlot(deploymentId, slot, config);
+export async function stopSlot(
+  deploymentId: string,
+  slot: Slot,
+) {
+
+  await checkForConfig();
+  return globalProcessManager.stopSlot(deploymentId, slot, globalConfig);
 }
 
 /**
@@ -288,10 +294,8 @@ export async function stopSlot(deploymentId: string, slot: Slot, config?: Deploy
  * console.log('Production slot:', promoted.slots.production);
  * ```
  */
-export async function promote(deploymentId: string, config?: DeploygateConfig) {
-  if (!globalPromoteEngine || config?.store) {
-    await initializeManagers(config);
-  }
+export async function promote(deploymentId: string) {
+  await checkForConfig();
   return globalPromoteEngine.promote(deploymentId);
 }
 
@@ -314,10 +318,10 @@ export async function promote(deploymentId: string, config?: DeploygateConfig) {
  * console.log('Production slot stopped:', rolled.slots.production.status);
  * ```
  */
-export async function rollback(deploymentId: string, config?: DeploygateConfig) {
-  if (!globalPromoteEngine || config?.store) {
-    await initializeManagers(config);
-  }
+export async function rollback(
+  deploymentId: string
+) {
+  checkForConfig();
   return globalPromoteEngine.rollback(deploymentId);
 }
 
@@ -343,12 +347,9 @@ export async function rollback(deploymentId: string, config?: DeploygateConfig) 
 export async function bindDomain(
   deploymentId: string,
   slot: Slot,
-  domain: string,
-  config?: DeploygateConfig
+  domain: string
 ) {
-  if (!globalDomainManager || config?.store) {
-    await initializeManagers(config);
-  }
+  await checkForConfig();
   return globalDomainManager.bindDomain(deploymentId, slot, domain);
 }
 
@@ -368,10 +369,11 @@ export async function bindDomain(
  * await unbindDomain(deployment.id, 'preview');
  * ```
  */
-export async function unbindDomain(deploymentId: string, slot: Slot, config?: DeploygateConfig) {
-  if (!globalDomainManager || config?.store) {
-    await initializeManagers(config);
-  }
+export async function unbindDomain(
+  deploymentId: string,
+  slot: Slot
+) {
+  await checkForConfig();
   return globalDomainManager.unbindDomain(deploymentId, slot);
 }
 
@@ -390,9 +392,10 @@ export async function unbindDomain(deploymentId: string, slot: Slot, config?: De
  * console.log(domain); // 'preview.example.com' or undefined
  * ```
  */
-export async function getDomain(deploymentId: string, slot: Slot, config?: DeploygateConfig) {
-  if (!globalDomainManager || config?.store) {
-    await initializeManagers(config);
-  }
+export async function getDomain(
+  deploymentId: string,
+  slot: Slot
+) {
+  await checkForConfig();
   return globalDomainManager.getDomain(deploymentId, slot);
 }

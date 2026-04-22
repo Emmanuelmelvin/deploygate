@@ -44,6 +44,8 @@ export class DeploygateEmitter<TEvents extends EventMap = {}> {
   }
 }
 
-export function createEmitter<TEvents extends EventMap = {}>(): DeploygateEmitter<TEvents> {
+export function createEmitter<
+  TEvents extends EventMap = {},
+>(): DeploygateEmitter<TEvents> {
   return new DeploygateEmitter<TEvents>();
 }

@@ -16,7 +16,10 @@ describe('PromoteEngine', () => {
   });
 
   it('promote throws if preview slot is not running', async () => {
-    const deployment = await deploymentManager.createDeployment('build-123', '/tmp/dist');
+    const deployment = await deploymentManager.createDeployment(
+      'build-123',
+      '/tmp/dist'
+    );
 
     await expect(promoteEngine.promote(deployment.id)).rejects.toThrow(
       /preview slot is not running/
@@ -24,7 +27,10 @@ describe('PromoteEngine', () => {
   });
 
   it('promote successfully copies preview state to production with explicit status and startedAt', async () => {
-    const deployment = await deploymentManager.createDeployment('build-456', '/tmp/dist');
+    const deployment = await deploymentManager.createDeployment(
+      'build-456',
+      '/tmp/dist'
+    );
     const previewStartTime = new Date('2024-01-01T00:00:00Z');
 
     // Start preview slot
@@ -51,13 +57,16 @@ describe('PromoteEngine', () => {
     // New startedAt should be set during promotion, not copied from preview
     expect(promoted.slots.production.startedAt).toBeDefined();
     expect(promoted.slots.production.startedAt).not.toEqual(previewStartTime);
-    expect((promoted.slots.production.startedAt as Date).getTime()).toBeGreaterThanOrEqual(
-      promotedTime.getTime()
-    );
+    expect(
+      (promoted.slots.production.startedAt as Date).getTime()
+    ).toBeGreaterThanOrEqual(promotedTime.getTime());
   });
 
   it('rollback resets production slot with explicit status and stoppedAt', async () => {
-    const deployment = await deploymentManager.createDeployment('build-789', '/tmp/dist');
+    const deployment = await deploymentManager.createDeployment(
+      'build-789',
+      '/tmp/dist'
+    );
 
     // Set up a promoted state
     const promoted = {
@@ -85,9 +94,9 @@ describe('PromoteEngine', () => {
     expect(rolledBack.status).toBe('active');
     expect(rolledBack.slots.production.status).toBe('stopped');
     expect(rolledBack.slots.production.stoppedAt).toBeDefined();
-    expect((rolledBack.slots.production.stoppedAt as Date).getTime()).toBeGreaterThanOrEqual(
-      rollbackTime.getTime()
-    );
+    expect(
+      (rolledBack.slots.production.stoppedAt as Date).getTime()
+    ).toBeGreaterThanOrEqual(rollbackTime.getTime());
   });
 
   it('calls onPromoted hook when provided', async () => {
@@ -101,7 +110,10 @@ describe('PromoteEngine', () => {
     };
 
     const engine = new PromoteEngine(store, config);
-    const deployment = await deploymentManager.createDeployment('build-hook', '/tmp/dist');
+    const deployment = await deploymentManager.createDeployment(
+      'build-hook',
+      '/tmp/dist'
+    );
 
     // Set up running preview
     await store.set(deployment.id, {
@@ -131,7 +143,10 @@ describe('PromoteEngine', () => {
     };
 
     const engine = new PromoteEngine(store, config);
-    const deployment = await deploymentManager.createDeployment('build-cancel-promote', '/tmp/dist');
+    const deployment = await deploymentManager.createDeployment(
+      'build-cancel-promote',
+      '/tmp/dist'
+    );
 
     // Set up running preview
     await store.set(deployment.id, {
@@ -145,7 +160,9 @@ describe('PromoteEngine', () => {
       },
     });
 
-    await expect(engine.promote(deployment.id)).rejects.toThrow('Promotion cancelled');
+    await expect(engine.promote(deployment.id)).rejects.toThrow(
+      'Promotion cancelled'
+    );
     expect(hookCalls).toEqual(['before']);
   });
 
@@ -203,8 +220,10 @@ describe('PromoteEngine', () => {
     };
 
     const engine = new PromoteEngine(store, config);
-    const deployment =
-      await deploymentManager.createDeployment('build-rollback', '/tmp/dist');
+    const deployment = await deploymentManager.createDeployment(
+      'build-rollback',
+      '/tmp/dist'
+    );
 
     // Set up promoted state
     const promoted = {
@@ -260,8 +279,12 @@ describe('PromoteEngine', () => {
     };
 
     const engine = new PromoteEngine(failingStore, config);
-    await expect(engine.rollback('test-id')).rejects.toThrow('Rollback store set failed');
+    await expect(engine.rollback('test-id')).rejects.toThrow(
+      'Rollback store set failed'
+    );
     expect(failedError).toBeDefined();
-    expect((failedError as unknown as Error).message).toBe('Rollback store set failed');
+    expect((failedError as unknown as Error).message).toBe(
+      'Rollback store set failed'
+    );
   });
 });
