@@ -1,6 +1,6 @@
 {
   "name": "deploygate",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Library + CLI for hosting platforms to manage preview/production deployment slots with atomic promotion",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
