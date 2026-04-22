@@ -1,3 +1,4 @@
+
 # Deployment API
 
 ## createDeployment(buildId, distPath)
@@ -9,17 +10,15 @@ Creates a new deployment and returns the deployment object.
 | buildId   | string | yes      | Unique build identifier     |
 | distPath  | string | yes      | Path to static build output |
 
-**Returns:** `Promise<Deployment>`
+**Returns:** `Promise\<Deployment\>`
 
 **Throws:** Error if buildId already exists or invalid
 
 > Config is automatically loaded from `deploygate.config.ts`
 
-::: raw
 ```ts
 const deployment = await createDeployment('build-123', './dist');
 ```
-:::
 
 ---
 
@@ -31,13 +30,11 @@ Fetch a deployment by id.
 | --------- | ------ | -------- | ------------- |
 | id        | string | yes      | Deployment id |
 
-**Returns:** `Promise<Deployment | null>`
+**Returns:** `Promise\<Deployment | null\>`
 
-::: raw
 ```ts
 const deployment = await getDeployment('dep-abc');
 ```
-:::
 
 ---
 
@@ -45,13 +42,11 @@ const deployment = await getDeployment('dep-abc');
 
 List all deployments.
 
-**Returns:** `Promise<Deployment[]>`
+**Returns:** `Promise\<Deployment[]\>`
 
-::: raw
 ```ts
 const deployments = await listDeployments();
 ```
-:::
 
 ---
 
@@ -59,18 +54,16 @@ const deployments = await listDeployments();
 
 Update a deployment with a partial patch.
 
-| Parameter | Type                      | Required | Description      |
-| --------- | ------------------------- | -------- | ---------------- |
-| id        | string                    | yes      | Deployment id    |
-| patch     | Partial<Deployment>       | yes      | Fields to update |
+| Parameter | Type                    | Required | Description      |
+| --------- | ----------------------- | -------- | ---------------- |
+| id        | string                  | yes      | Deployment id    |
+| patch     | `Partial\<Deployment\>` | yes      | Fields to update |
 
-**Returns:** `Promise<Deployment>`
+**Returns:** `Promise\<Deployment\>`
 
-::: raw
 ```ts
 await updateDeployment('dep-abc', { meta: { foo: 'bar' } });
 ```
-:::
 
 ---
 
@@ -82,10 +75,10 @@ Pause a deployment.
 | ------------ | ------ | -------- | ------------- |
 | deploymentId | string | yes      | Deployment id |
 
-**Returns:** `Promise<void>`
+**Returns:** `Promise\<void\>`
 
-::: raw
 ```ts
 await pauseDeployment('dep-abc');
 ```
-:::
+
+---
